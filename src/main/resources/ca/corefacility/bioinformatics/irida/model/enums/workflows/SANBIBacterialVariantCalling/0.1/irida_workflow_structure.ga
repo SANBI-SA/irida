@@ -1,0 +1,696 @@
+{
+    "a_galaxy_workflow": "true", 
+    "annotation": "", 
+    "format-version": "0.1", 
+    "name": "SANBI Bacterial Variant Calling", 
+    "steps": {
+        "0": {
+            "annotation": "", 
+            "content_id": null, 
+            "errors": null, 
+            "id": 0, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "", 
+                    "name": "Input Dataset Collection"
+                }
+            ], 
+            "label": null, 
+            "name": "Input dataset collection", 
+            "outputs": [], 
+            "position": {
+                "left": 200, 
+                "top": 200
+            }, 
+            "tool_id": null, 
+            "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"Input Dataset Collection\"}", 
+            "tool_version": null, 
+            "type": "data_collection_input", 
+            "uuid": "2ba209cc-40e5-4617-8021-67f0ad9cf99a", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "output", 
+                    "uuid": "e9a6a27d-43db-4361-91eb-50d3f9c3b697"
+                }
+            ]
+        }, 
+        "1": {
+            "annotation": "", 
+            "content_id": null, 
+            "errors": null, 
+            "id": 1, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "", 
+                    "name": "Input Dataset"
+                }
+            ], 
+            "label": null, 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 200, 
+                "top": 285
+            }, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input Dataset\"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "uuid": "23703b96-7fd0-46a7-853a-7f0aa23232b6", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "output", 
+                    "uuid": "e864c6ea-eb16-4741-bc7b-d8767f255d45"
+                }
+            ]
+        }, 
+        "2": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/trimmomatic/trimmomatic/0.36.4", 
+            "errors": null, 
+            "id": 2, 
+            "input_connections": {
+                "readtype|fastq_pair": {
+                    "id": 0, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Trimmomatic", 
+                    "name": "readtype"
+                }
+            ], 
+            "label": null, 
+            "name": "Trimmomatic", 
+            "outputs": [
+                {
+                    "name": "fastq_out_paired", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "fastq_out_unpaired", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "fastq_out_r1_paired", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "fastq_out_r2_paired", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "fastq_out_r1_unpaired", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "fastq_out_r2_unpaired", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "fastq_out", 
+                    "type": "input"
+                }
+            ], 
+            "position": {
+                "left": 461, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionfastq_out": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fastq_out"
+                }, 
+                "HideDatasetActionfastq_out_paired": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fastq_out_paired"
+                }, 
+                "HideDatasetActionfastq_out_r1_paired": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fastq_out_r1_paired"
+                }, 
+                "HideDatasetActionfastq_out_r1_unpaired": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fastq_out_r1_unpaired"
+                }, 
+                "HideDatasetActionfastq_out_r2_paired": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fastq_out_r2_paired"
+                }, 
+                "HideDatasetActionfastq_out_r2_unpaired": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fastq_out_r2_unpaired"
+                }, 
+                "HideDatasetActionfastq_out_unpaired": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fastq_out_unpaired"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/trimmomatic/trimmomatic/0.36.4", 
+            "tool_shed_repository": {
+                "changeset_revision": "069b6b601fad", 
+                "name": "trimmomatic", 
+                "owner": "sanbi-uwc", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"operations\": \"[{\\\"__index__\\\": 0, \\\"operation\\\": {\\\"window_size\\\": \\\"4\\\", \\\"name\\\": \\\"SLIDINGWINDOW\\\", \\\"__current_case__\\\": 0, \\\"required_quality\\\": \\\"20\\\"}}]\", \"__page__\": null, \"__rerun_remap_job_id__\": null, \"readtype\": \"{\\\"single_or_paired\\\": \\\"collection\\\", \\\"fastq_pair\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"__current_case__\\\": 2}\", \"illuminaclip\": \"{\\\"do_illuminaclip\\\": \\\"false\\\", \\\"__current_case__\\\": 1}\"}", 
+            "tool_version": "0.36.4", 
+            "type": "tool", 
+            "uuid": "a1cacef1-6250-4a7f-bbfd-7775b666feec", 
+            "workflow_outputs": []
+        }, 
+        "3": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_align/novo_align/0.0.8", 
+            "errors": null, 
+            "id": 3, 
+            "input_connections": {
+                "index|reference": {
+                    "id": 1, 
+                    "output_name": "output"
+                }, 
+                "paired_end|paired_input_type_conditional|fastq_pair": {
+                    "id": 2, 
+                    "output_name": "fastq_out_paired"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool NOVO ALIGN", 
+                    "name": "index"
+                }
+            ], 
+            "label": null, 
+            "name": "NOVO ALIGN", 
+            "outputs": [
+                {
+                    "name": "out_file", 
+                    "type": "bam"
+                }
+            ], 
+            "position": {
+                "left": 789, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionout_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "out_file"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_align/novo_align/0.0.8", 
+            "tool_shed_repository": {
+                "changeset_revision": "94ae1dd64bca", 
+                "name": "novo_align", 
+                "owner": "sanbi-uwc", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"index\": \"{\\\"source\\\": \\\"history\\\", \\\"reference\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"paired_end\": \"{\\\"is_paired_end\\\": \\\"true\\\", \\\"paired_input_type_conditional\\\": {\\\"fastq_pair\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"paired_input_type\\\": \\\"collection\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 1}\", \"__page__\": null}", 
+            "tool_version": "0.0.8", 
+            "type": "tool", 
+            "uuid": "4f5b81db-a6d9-44c4-af8c-278f2bd91bee", 
+            "workflow_outputs": []
+        }, 
+        "4": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_sort/novo_sort/0.0.2", 
+            "errors": null, 
+            "id": 4, 
+            "input_connections": {
+                "input1": {
+                    "id": 3, 
+                    "output_name": "out_file"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool NOVO SORT", 
+                    "name": "input1"
+                }
+            ], 
+            "label": null, 
+            "name": "NOVO SORT", 
+            "outputs": [
+                {
+                    "name": "out_file", 
+                    "type": "bam"
+                }
+            ], 
+            "position": {
+                "left": 1117, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionout_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "out_file"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_sort/novo_sort/0.0.2", 
+            "tool_shed_repository": {
+                "changeset_revision": "2f3d4c867e1d", 
+                "name": "novo_sort", 
+                "owner": "sanbi-uwc", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"__page__\": null, \"__rerun_remap_job_id__\": null, \"input1\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "0.0.2", 
+            "type": "tool", 
+            "uuid": "1616d6a0-1e41-453b-9ddf-6198d5e3a0e9", 
+            "workflow_outputs": []
+        }, 
+        "5": {
+            "annotation": "", 
+            "content_id": "toolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_MarkDuplicates/1.135", 
+            "errors": null, 
+            "id": 5, 
+            "input_connections": {
+                "inputFile": {
+                    "id": 4, 
+                    "output_name": "out_file"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool MarkDuplicates", 
+                    "name": "inputFile"
+                }
+            ], 
+            "label": null, 
+            "name": "MarkDuplicates", 
+            "outputs": [
+                {
+                    "name": "metrics_file", 
+                    "type": "txt"
+                }, 
+                {
+                    "name": "outFile", 
+                    "type": "bam"
+                }
+            ], 
+            "position": {
+                "left": 1345, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionmetrics_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "metrics_file"
+                }, 
+                "HideDatasetActionoutFile": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "outFile"
+                }
+            }, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_MarkDuplicates/1.135", 
+            "tool_shed_repository": {
+                "changeset_revision": "5f1da1eadb39", 
+                "name": "picard", 
+                "owner": "avowinkel", 
+                "tool_shed": "toolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"duplicate_scoring_strategy\": \"\\\"SUM_OF_BASE_QUALITIES\\\"\", \"remove_duplicates\": \"\\\"false\\\"\", \"read_name_regex\": \"\\\"[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.\\\"\", \"__page__\": null, \"__rerun_remap_job_id__\": null, \"validation_stringency\": \"\\\"LENIENT\\\"\", \"comments\": \"[]\", \"assume_sorted\": \"\\\"true\\\"\", \"optical_duplicate_pixel_distance\": \"\\\"100\\\"\", \"inputFile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.135", 
+            "type": "tool", 
+            "uuid": "4037d10c-95f8-4fc9-804f-cad4262112de", 
+            "workflow_outputs": []
+        }, 
+        "6": {
+            "annotation": "", 
+            "content_id": "toolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_CASM/1.135", 
+            "errors": null, 
+            "id": 6, 
+            "input_connections": {
+                "inputFile": {
+                    "id": 4, 
+                    "output_name": "out_file"
+                }, 
+                "reference_source|ref_file": {
+                    "id": 1, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Collect Alignment Summary Metrics", 
+                    "name": "reference_source"
+                }, 
+                {
+                    "description": "runtime parameter for tool Collect Alignment Summary Metrics", 
+                    "name": "inputFile"
+                }
+            ], 
+            "label": null, 
+            "name": "Collect Alignment Summary Metrics", 
+            "outputs": [
+                {
+                    "name": "outFile", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 1345, 
+                "top": 363
+            }, 
+            "post_job_actions": {}, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_CASM/1.135", 
+            "tool_shed_repository": {
+                "changeset_revision": "5f1da1eadb39", 
+                "name": "picard", 
+                "owner": "avowinkel", 
+                "tool_shed": "toolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"bisulphite\": \"\\\"false\\\"\", \"__page__\": null, \"maxinsert\": \"\\\"100000\\\"\", \"__rerun_remap_job_id__\": null, \"assume_sorted\": \"\\\"true\\\"\", \"metric_accumulation_level\": \"[\\\"ALL_READS\\\"]\", \"validation_stringency\": \"\\\"LENIENT\\\"\", \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"__current_case__\\\": 1}\", \"adapters\": \"[]\", \"inputFile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.135", 
+            "type": "tool", 
+            "uuid": "7354d41f-3b55-490b-ba6e-df0447a34a45", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "outFile", 
+                    "uuid": "354de9d6-ae7c-4bb6-9987-5fca7eecb0da"
+                }
+            ]
+        }, 
+        "7": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/devteam/freebayes/freebayes/0.4.1", 
+            "errors": null, 
+            "id": 7, 
+            "input_connections": {
+                "reference_source|input_bams_0|input_bam": {
+                    "id": 5, 
+                    "output_name": "outFile"
+                }, 
+                "reference_source|ref_file": {
+                    "id": 1, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool FreeBayes", 
+                    "name": "reference_source"
+                }
+            ], 
+            "label": null, 
+            "name": "FreeBayes", 
+            "outputs": [
+                {
+                    "name": "output_vcf", 
+                    "type": "vcf"
+                }, 
+                {
+                    "name": "output_failed_alleles_bed", 
+                    "type": "bed"
+                }, 
+                {
+                    "name": "output_trace", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 1673, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_failed_alleles_bed": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_failed_alleles_bed"
+                }, 
+                "HideDatasetActionoutput_trace": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_trace"
+                }, 
+                "HideDatasetActionoutput_vcf": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_vcf"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/devteam/freebayes/freebayes/0.4.1", 
+            "tool_shed_repository": {
+                "changeset_revision": "9f3d6c3098ac", 
+                "name": "freebayes", 
+                "owner": "devteam", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"__page__\": null, \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}], \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"options_type\": \"{\\\"__current_case__\\\": 1, \\\"options_type_selector\\\": \\\"simple\\\"}\", \"target_limit_type\": \"{\\\"target_limit_type_selector\\\": \\\"do_not_limit\\\", \\\"__current_case__\\\": 0}\"}", 
+            "tool_version": "0.4.1", 
+            "type": "tool", 
+            "uuid": "b8b3b9a7-3075-4988-993f-66a1f21dd048", 
+            "workflow_outputs": []
+        }, 
+        "8": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/qualimap2/qualimap_bamqc/2.2", 
+            "errors": null, 
+            "id": 8, 
+            "input_connections": {
+                "input_realigned_bam_file": {
+                    "id": 5, 
+                    "output_name": "outFile"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool QualiMap BamQC", 
+                    "name": "input_realigned_bam_file"
+                }
+            ], 
+            "label": null, 
+            "name": "QualiMap BamQC", 
+            "outputs": [
+                {
+                    "name": "genomecov_file", 
+                    "type": "genomecov"
+                }
+            ], 
+            "position": {
+                "left": 1673, 
+                "top": 419
+            }, 
+            "post_job_actions": {
+                "HideDatasetActiongenomecov_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "genomecov_file"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/qualimap2/qualimap_bamqc/2.2", 
+            "tool_shed_repository": {
+                "changeset_revision": "7923e67fa16a", 
+                "name": "qualimap2", 
+                "owner": "sanbi-uwc", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"mem_size\": \"\\\"8G\\\"\", \"__rerun_remap_job_id__\": null, \"input_realigned_bam_file\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__page__\": null}", 
+            "tool_version": "2.2", 
+            "type": "tool", 
+            "uuid": "263467cc-99c8-4b0e-af2d-68dcfd2fdbcd", 
+            "workflow_outputs": []
+        }, 
+        "9": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/jjohnson/snpeff/snpEff/4.1.0", 
+            "errors": null, 
+            "id": 9, 
+            "input_connections": {
+                "input": {
+                    "id": 7, 
+                    "output_name": "output_vcf"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool SnpEff", 
+                    "name": "input"
+                }, 
+                {
+                    "description": "runtime parameter for tool SnpEff", 
+                    "name": "intervals"
+                }, 
+                {
+                    "description": "runtime parameter for tool SnpEff", 
+                    "name": "transcripts"
+                }
+            ], 
+            "label": null, 
+            "name": "SnpEff", 
+            "outputs": [
+                {
+                    "name": "snpeff_output", 
+                    "type": "vcf"
+                }, 
+                {
+                    "name": "statsFile", 
+                    "type": "html"
+                }
+            ], 
+            "position": {
+                "left": 2001, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionstatsFile": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "statsFile"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/jjohnson/snpeff/snpEff/4.1.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "924af057bbca", 
+                "name": "snpeff", 
+                "owner": "jjohnson", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"spliceSiteSize\": \"\\\"2\\\"\", \"filter\": \"{\\\"specificEffects\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"udLength\": \"\\\"5000\\\"\", \"inputFormat\": \"\\\"vcf\\\"\", \"spliceRegion\": \"{\\\"__current_case__\\\": 0, \\\"setSpliceRegions\\\": \\\"no\\\"}\", \"outputConditional\": \"{\\\"outputFormat\\\": \\\"vcf\\\", \\\"__current_case__\\\": 0}\", \"__page__\": null, \"__rerun_remap_job_id__\": null, \"filterOut\": \"null\", \"generate_stats\": \"\\\"true\\\"\", \"noLog\": \"\\\"true\\\"\", \"chr\": \"\\\"\\\"\", \"intervals\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"snpDb\": \"{\\\"genome_version\\\": \\\"m_tuberculosis_H37Rv\\\", \\\"__current_case__\\\": 2, \\\"genomeSrc\\\": \\\"named\\\"}\", \"offset\": \"\\\"default\\\"\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"transcripts\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"annotations\": \"null\"}", 
+            "tool_version": "4.1.0", 
+            "type": "tool", 
+            "uuid": "d75a505d-cc25-4d6d-93a7-55c19a5998d1", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "snpeff_output", 
+                    "uuid": "9d093f4f-ace0-49ca-8042-022c1c5a8458"
+                }
+            ]
+        }, 
+        "10": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/vcf_to_alignment/vcf_to_alignment/0.3", 
+            "errors": null, 
+            "id": 10, 
+            "input_connections": {
+                "reference|history": {
+                    "id": 1, 
+                    "output_name": "output"
+                }, 
+                "vcf_inputs": {
+                    "id": 9, 
+                    "output_name": "snpeff_output"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Generate FASTA alignment from VCF collection", 
+                    "name": "reference"
+                }, 
+                {
+                    "description": "runtime parameter for tool Generate FASTA alignment from VCF collection", 
+                    "name": "vcf_inputs"
+                }
+            ], 
+            "label": null, 
+            "name": "Generate FASTA alignment from VCF collection", 
+            "outputs": [
+                {
+                    "name": "output_alignment", 
+                    "type": "fasta"
+                }
+            ], 
+            "position": {
+                "left": 2324, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_alignment": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_alignment"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/vcf_to_alignment/vcf_to_alignment/0.3", 
+            "tool_shed_repository": {
+                "changeset_revision": "62fbd3f96b30", 
+                "name": "vcf_to_alignment", 
+                "owner": "sanbi-uwc", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"__page__\": null, \"__rerun_remap_job_id__\": null, \"remove_invariant_sites\": \"\\\"true\\\"\", \"reference\": \"{\\\"source\\\": \\\"history\\\", \\\"__current_case__\\\": 0, \\\"history\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}\", \"vcf_inputs\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "0.3", 
+            "type": "tool", 
+            "uuid": "019d5292-d8c7-486c-9da6-f7413881e83f", 
+            "workflow_outputs": []
+        }, 
+        "11": {
+            "annotation": "", 
+            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/fasttree/fasttree/0.1", 
+            "errors": null, 
+            "id": 11, 
+            "input_connections": {
+                "input_alignment": {
+                    "id": 10, 
+                    "output_name": "output_alignment"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool FastTree", 
+                    "name": "input_alignment"
+                }
+            ], 
+            "label": null, 
+            "name": "FastTree", 
+            "outputs": [
+                {
+                    "name": "output_tree", 
+                    "type": "nhx"
+                }, 
+                {
+                    "name": "output_log", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 2652, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_log": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_log"
+                }
+            }, 
+            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/fasttree/fasttree/0.1", 
+            "tool_shed_repository": {
+                "changeset_revision": "614a12d56e58", 
+                "name": "fasttree", 
+                "owner": "sanbi-uwc", 
+                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+            }, 
+            "tool_state": "{\"__page__\": null, \"input_alignment\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"advanced_options\": \"{\\\"advanced_options_selector\\\": \\\"true\\\", \\\"log\\\": \\\"false\\\", \\\"noml\\\": \\\"false\\\", \\\"fastest\\\": \\\"true\\\", \\\"__current_case__\\\": 0, \\\"nosupport\\\": \\\"false\\\", \\\"gamma\\\": \\\"false\\\", \\\"alignment_type_selection\\\": {\\\"nucl_alignment_model\\\": \\\"\\\", \\\"alignment_type2\\\": \\\"nucl\\\", \\\"__current_case__\\\": 0}}\"}", 
+            "tool_version": "0.1", 
+            "type": "tool", 
+            "uuid": "fd202bd6-01f1-4a82-ad23-7bf07d29157c", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "output_tree", 
+                    "uuid": "ca4af7ed-b3c1-44cc-86be-7789e4ddc78b"
+                }
+            ]
+        }
+    }, 
+    "uuid": "84e137f8-3af8-42b6-a932-c03977c05b76"
+}
