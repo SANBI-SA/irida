@@ -13,7 +13,7 @@
             "inputs": [
                 {
                     "description": "", 
-                    "name": "Input Dataset Collection"
+                    "name": "sequence_reads_paired_collection"
                 }
             ], 
             "label": null, 
@@ -24,7 +24,7 @@
                 "top": 200
             }, 
             "tool_id": null, 
-            "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"Input Dataset Collection\"}", 
+            "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"sequence_reads_paired_collection\"}", 
             "tool_version": null, 
             "type": "data_collection_input", 
             "uuid": "2ba209cc-40e5-4617-8021-67f0ad9cf99a", 

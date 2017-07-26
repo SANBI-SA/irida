@@ -25,6 +25,11 @@ import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisSIST
  */
 @XmlEnum
 public enum AnalysisType {
+	/**
+	 * A SANBI bacterial variant calling analysis type for generating fasta trees.
+	 */
+	@XmlEnumValue("sanbi-bacterial-variant-calling")
+	SANBI_BACTERIAL_VARIANT_CALLING("sanbi-bacterial-variant-calling", AnalysisSANBIBacterialVariantCalling.class),
 
 	/**
 	 * A phylogenomics analysis type for generating phylogenomic trees.

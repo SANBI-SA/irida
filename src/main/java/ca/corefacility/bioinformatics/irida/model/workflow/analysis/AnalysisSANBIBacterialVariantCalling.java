@@ -30,7 +30,7 @@ public class AnalysisSANBIBacterialVariantCalling extends Analysis {
 	}
 
 	@JsonIgnore
-	public AnalysisOutputFile getSISTRResults() {
-		return getAnalysisOutputFile("sistr-predictions");
+	public AnalysisOutputFile getSANBIVariantCallResults() {
+		return getAnalysisOutputFile("fasttree-output");
 	}
 }
