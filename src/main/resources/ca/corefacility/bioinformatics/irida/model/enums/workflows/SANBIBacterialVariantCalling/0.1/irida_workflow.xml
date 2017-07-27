@@ -22,8 +22,8 @@
 	</outputs>
 	<toolRepositories>
 		<repository>
-			<name>suite_snvphyl_1_0_1</name>
-			<owner>nml</owner>
+			<name>suite_sanbi_bvc_0_1</name>
+			<owner>sanbi-uwc</owner>
 			<url>https://testtoolshed.g2.bx.psu.edu</url>
 			<revision>8ab1a10c0b78</revision>
 		</repository>

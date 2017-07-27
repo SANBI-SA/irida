@@ -17,6 +17,7 @@ import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisAsse
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisAssemblyAnnotationCollection;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisPhylogenomicsPipeline;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisSISTRTyping;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisSANBIBacterialVariantCalling;
 
 /**
  * Defines a specific type of an analysis.

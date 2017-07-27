@@ -6,4 +6,5 @@
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 	<include file="announcement.xml" relativeToChangelogFile="true"/>
 	<include file="sample-removal-event.xml" relativeToChangelogFile="true"/>
+	<include file="sanbi-bacterial-variant-calling.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
