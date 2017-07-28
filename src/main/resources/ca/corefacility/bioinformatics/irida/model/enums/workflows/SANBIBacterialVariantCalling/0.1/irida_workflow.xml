@@ -15,7 +15,7 @@
 			<toolParameter
 				toolId="https://testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/trimmomatic/trimmomatic/0.36"
 				parameterName="length" />
-		</parameter>	-->
+		</parameter>-->
 	</parameters>
 	<outputs>
 		<output name="output_tree" fileName="output_tree.nhx" />
