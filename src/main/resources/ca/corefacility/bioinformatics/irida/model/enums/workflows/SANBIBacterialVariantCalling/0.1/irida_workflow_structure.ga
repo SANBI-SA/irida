@@ -12,7 +12,7 @@
             "inputs": [
                 {
                     "description": "", 
-                    "name": "sample_input_paired"
+                    "name": "sequence_reads_paired"
                 }
             ], 
             "label": null, 
@@ -24,7 +24,7 @@
             }, 
             "tool_errors": null, 
             "tool_id": null, 
-            "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"sample_input_paired\"}", 
+            "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"sequence_reads_paired\"}", 
             "tool_version": null, 
             "type": "data_collection_input", 
             "uuid": "7e7618fc-99ee-47a7-a320-116c5024d19b", 
