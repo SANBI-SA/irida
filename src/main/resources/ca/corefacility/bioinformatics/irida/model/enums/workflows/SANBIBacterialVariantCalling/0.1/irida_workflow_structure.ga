@@ -128,12 +128,21 @@
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_align/novo_align/0.0.10", 
             "id": 3, 
             "input_connections": {
+                "index|reference": {
+                    "id": 1, 
+                    "output_name": "output"
+                }, 
                 "paired_end|paired_input_type_conditional|fastq_pair": {
                     "id": 2, 
                     "output_name": "fastq_out_paired"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool novoalign", 
+                    "name": "index"
+                }
+            ], 
             "label": null, 
             "name": "novoalign", 
             "outputs": [
@@ -155,7 +164,7 @@
                 "owner": "sanbi-uwc", 
                 "tool_shed": "testtoolshed.g2.bx.psu.edu"
             }, 
-            "tool_state": "{\"index\": \"{\\\"source\\\": \\\"builtin\\\", \\\"index1\\\": \\\"\\\", \\\"__current_case__\\\": 0}\", \"__rerun_remap_job_id__\": null, \"paired_end\": \"{\\\"is_paired_end\\\": \\\"true\\\", \\\"paired_input_type_conditional\\\": {\\\"fastq_pair\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"paired_input_type\\\": \\\"collection\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 1}\", \"__page__\": 0}", 
+            "tool_state": "{\"index\": \"{\\\"source\\\": \\\"history\\\", \\\"reference\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"paired_end\": \"{\\\"is_paired_end\\\": \\\"true\\\", \\\"paired_input_type_conditional\\\": {\\\"fastq_pair\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"paired_input_type\\\": \\\"collection\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 1}\", \"__page__\": 0}", 
             "tool_version": "0.0.10", 
             "type": "tool", 
             "uuid": "5661b924-3f19-47e6-89b4-3a1b4763c1a0", 
@@ -511,5 +520,5 @@
             "workflow_outputs": []
         }
     }, 
-    "uuid": "5e162596-bd4d-4e66-bac3-abaebe9193ec"
+    "uuid": "faaea54a-caba-4c60-ac30-4faf34228b7a"
 }
