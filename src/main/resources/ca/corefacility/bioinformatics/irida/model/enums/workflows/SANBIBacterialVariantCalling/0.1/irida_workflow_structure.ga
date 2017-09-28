@@ -7,6 +7,7 @@
         "0": {
             "annotation": "", 
             "content_id": null, 
+            "errors": null, 
             "id": 0, 
             "input_connections": {}, 
             "inputs": [
@@ -15,14 +16,13 @@
                     "name": "sequence_reads_paired"
                 }
             ], 
-            "label": null, 
+            "label": "sequence_reads_paired", 
             "name": "Input dataset collection", 
             "outputs": [], 
             "position": {
                 "left": 241, 
                 "top": 236
             }, 
-            "tool_errors": null, 
             "tool_id": null, 
             "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"sequence_reads_paired\"}", 
             "tool_version": null, 
@@ -33,6 +33,7 @@
         "1": {
             "annotation": "", 
             "content_id": null, 
+            "errors": null, 
             "id": 1, 
             "input_connections": {}, 
             "inputs": [
@@ -41,14 +42,13 @@
                     "name": "reference_file"
                 }
             ], 
-            "label": null, 
+            "label": "reference_file", 
             "name": "Input dataset", 
             "outputs": [], 
             "position": {
                 "left": 241, 
                 "top": 321
             }, 
-            "tool_errors": null, 
             "tool_id": null, 
             "tool_state": "{\"name\": \"reference_file\"}", 
             "tool_version": null, 
@@ -59,6 +59,7 @@
         "2": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/trimmomatic/trimmomatic/0.36.4", 
+            "errors": null, 
             "id": 2, 
             "input_connections": {
                 "readtype|fastq_pair": {
@@ -109,7 +110,6 @@
                 "top": 236
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/trimmomatic/trimmomatic/0.36.4", 
             "tool_shed_repository": {
                 "changeset_revision": "069b6b601fad", 
@@ -126,6 +126,7 @@
         "3": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_align/novo_align/0.0.10", 
+            "errors": null, 
             "id": 3, 
             "input_connections": {
                 "index|reference": {
@@ -156,7 +157,6 @@
                 "top": 236
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_align/novo_align/0.0.10", 
             "tool_shed_repository": {
                 "changeset_revision": "119cb8e503d0", 
@@ -173,6 +173,7 @@
         "4": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_MarkDuplicates/1.134", 
+            "errors": null, 
             "id": 4, 
             "input_connections": {
                 "inputFile": {
@@ -203,7 +204,6 @@
                 "top": 236
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_MarkDuplicates/1.134", 
             "tool_shed_repository": {
                 "changeset_revision": "ffa70c31d088", 
@@ -211,7 +211,7 @@
                 "owner": "avowinkel", 
                 "tool_shed": "testtoolshed.g2.bx.psu.edu"
             }, 
-            "tool_state": "{\"duplicate_scoring_strategy\": \"\\\"SUM_OF_BASE_QUALITIES\\\"\", \"remove_duplicates\": \"\\\"false\\\"\", \"read_name_regex\": \"\\\"[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"optical_duplicate_pixel_distance\": \"\\\"100\\\"\", \"comments\": \"[]\", \"assume_sorted\": \"\\\"true\\\"\", \"validation_stringency\": \"\\\"LENIENT\\\"\", \"inputFile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_state": "{\"duplicate_scoring_strategy\": \"\\\"SUM_OF_BASE_QUALITIES\\\"\", \"remove_duplicates\": \"\\\"false\\\"\", \"read_name_regex\": \"\\\"[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"validation_stringency\": \"\\\"LENIENT\\\"\", \"comments\": \"[]\", \"assume_sorted\": \"\\\"true\\\"\", \"optical_duplicate_pixel_distance\": \"\\\"100\\\"\", \"inputFile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.134", 
             "type": "tool", 
             "uuid": "9c4b0b58-15da-4e5b-8d6f-ddf2e97de301", 
@@ -220,6 +220,7 @@
         "5": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_CASM/1.134", 
+            "errors": null, 
             "id": 5, 
             "input_connections": {
                 "inputFile": {
@@ -254,7 +255,6 @@
                 "top": 401
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_CASM/1.134", 
             "tool_shed_repository": {
                 "changeset_revision": "ffa70c31d088", 
@@ -271,6 +271,7 @@
         "6": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/devteam/freebayes/freebayes/0.4.1", 
+            "errors": null, 
             "id": 6, 
             "input_connections": {
                 "reference_source|input_bams_0|input_bam": {
@@ -309,7 +310,6 @@
                 "top": 236
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/devteam/freebayes/freebayes/0.4.1", 
             "tool_shed_repository": {
                 "changeset_revision": "9f3d6c3098ac", 
@@ -326,6 +326,7 @@
         "7": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/qualimap2/qualimap_bamqc/2.2", 
+            "errors": null, 
             "id": 7, 
             "input_connections": {
                 "input_realigned_bam_file": {
@@ -352,7 +353,6 @@
                 "top": 458
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/qualimap2/qualimap_bamqc/2.2", 
             "tool_shed_repository": {
                 "changeset_revision": "7923e67fa16a", 
@@ -369,6 +369,7 @@
         "8": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/jjohnson/snpeff/snpEff/4.1.0", 
+            "errors": null, 
             "id": 8, 
             "input_connections": {
                 "input": {
@@ -379,11 +380,11 @@
             "inputs": [
                 {
                     "description": "runtime parameter for tool SnpEff", 
-                    "name": "intervals"
+                    "name": "input"
                 }, 
                 {
                     "description": "runtime parameter for tool SnpEff", 
-                    "name": "input"
+                    "name": "intervals"
                 }, 
                 {
                     "description": "runtime parameter for tool SnpEff", 
@@ -407,7 +408,6 @@
                 "top": 236
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/jjohnson/snpeff/snpEff/4.1.0", 
             "tool_shed_repository": {
                 "changeset_revision": "924af057bbca", 
@@ -415,7 +415,7 @@
                 "owner": "jjohnson", 
                 "tool_shed": "testtoolshed.g2.bx.psu.edu"
             }, 
-            "tool_state": "{\"spliceSiteSize\": \"\\\"2\\\"\", \"filter\": \"{\\\"specificEffects\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"filterOut\": \"null\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"inputFormat\": \"\\\"vcf\\\"\", \"__page__\": 0, \"outputConditional\": \"{\\\"outputFormat\\\": \\\"vcf\\\", \\\"__current_case__\\\": 0}\", \"__rerun_remap_job_id__\": null, \"udLength\": \"\\\"5000\\\"\", \"generate_stats\": \"\\\"true\\\"\", \"noLog\": \"\\\"true\\\"\", \"chr\": \"\\\"\\\"\", \"intervals\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"snpDb\": \"{\\\"genome_version\\\": \\\"m_tuberculosis_H37Rv\\\", \\\"__current_case__\\\": 2, \\\"genomeSrc\\\": \\\"named\\\"}\", \"offset\": \"\\\"default\\\"\", \"spliceRegion\": \"{\\\"__current_case__\\\": 0, \\\"setSpliceRegions\\\": \\\"no\\\"}\", \"transcripts\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"annotations\": \"null\"}", 
+            "tool_state": "{\"spliceSiteSize\": \"\\\"2\\\"\", \"filter\": \"{\\\"specificEffects\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"udLength\": \"\\\"5000\\\"\", \"inputFormat\": \"\\\"vcf\\\"\", \"spliceRegion\": \"{\\\"__current_case__\\\": 0, \\\"setSpliceRegions\\\": \\\"no\\\"}\", \"outputConditional\": \"{\\\"outputFormat\\\": \\\"vcf\\\", \\\"__current_case__\\\": 0}\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"filterOut\": \"null\", \"generate_stats\": \"\\\"true\\\"\", \"noLog\": \"\\\"true\\\"\", \"chr\": \"\\\"\\\"\", \"intervals\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"snpDb\": \"{\\\"genome_version\\\": \\\"m_tuberculosis_H37Rv\\\", \\\"__current_case__\\\": 2, \\\"genomeSrc\\\": \\\"named\\\"}\", \"offset\": \"\\\"default\\\"\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"transcripts\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"annotations\": \"null\"}", 
             "tool_version": "4.1.0", 
             "type": "tool", 
             "uuid": "b15cc947-1798-416f-9d61-dd6b82a933ca", 
@@ -424,6 +424,7 @@
         "9": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/vcf_to_alignment/vcf_to_alignment/0.3", 
+            "errors": null, 
             "id": 9, 
             "input_connections": {
                 "reference|history": {
@@ -458,7 +459,6 @@
                 "top": 236
             }, 
             "post_job_actions": {}, 
-            "tool_errors": null, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/vcf_to_alignment/vcf_to_alignment/0.3", 
             "tool_shed_repository": {
                 "changeset_revision": "62fbd3f96b30", 
@@ -466,7 +466,7 @@
                 "owner": "sanbi-uwc", 
                 "tool_shed": "testtoolshed.g2.bx.psu.edu"
             }, 
-            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"reference\": \"{\\\"source\\\": \\\"history\\\", \\\"__current_case__\\\": 0, \\\"history\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}\", \"remove_invariant_sites\": \"\\\"false\\\"\", \"vcf_inputs\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"remove_invariant_sites\": \"\\\"false\\\"\", \"reference\": \"{\\\"source\\\": \\\"history\\\", \\\"__current_case__\\\": 0, \\\"history\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}\", \"vcf_inputs\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "0.3", 
             "type": "tool", 
             "uuid": "1d804351-f458-4338-8cf8-0882184f91e3", 
@@ -475,6 +475,7 @@
         "10": {
             "annotation": "", 
             "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/fasttree/fasttree/0.1", 
+            "errors": null, 
             "id": 10, 
             "input_connections": {
                 "input_alignment": {
@@ -504,8 +505,15 @@
                 "left": 2404, 
                 "top": 236
             }, 
-            "post_job_actions": {}, 
-            "tool_errors": null, 
+            "post_job_actions": {
+                "RenameDatasetActionoutput_tree": {
+                    "action_arguments": {
+                        "newname": "output_tree.nhx"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output_tree"
+                }
+            }, 
             "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/fasttree/fasttree/0.1", 
             "tool_shed_repository": {
                 "changeset_revision": "614a12d56e58", 
@@ -513,12 +521,12 @@
                 "owner": "sanbi-uwc", 
                 "tool_shed": "testtoolshed.g2.bx.psu.edu"
             }, 
-            "tool_state": "{\"__page__\": 0, \"advanced_options\": \"{\\\"alignment_type1\\\": \\\"prot\\\", \\\"advanced_options_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"input_alignment\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_state": "{\"__page__\": null, \"input_alignment\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"advanced_options\": \"{\\\"alignment_type1\\\": \\\"prot\\\", \\\"advanced_options_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}\"}", 
             "tool_version": "0.1", 
             "type": "tool", 
             "uuid": "ae9b48a0-fb7e-4106-aa1c-c2a66189ee6c", 
             "workflow_outputs": []
         }
     }, 
-    "uuid": "faaea54a-caba-4c60-ac30-4faf34228b7a"
+    "uuid": "62936be2-4c12-44b7-9510-8d4ca1247ac7"
 }

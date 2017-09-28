@@ -31,6 +31,6 @@ public class AnalysisSANBIBacterialVariantCalling extends Analysis {
 
 	@JsonIgnore
 	public AnalysisOutputFile getSANBIVariantCallResults() {
-		return getAnalysisOutputFile("phylogeneticTree");
+		return getAnalysisOutputFile("output_tree");
 	}
 }
