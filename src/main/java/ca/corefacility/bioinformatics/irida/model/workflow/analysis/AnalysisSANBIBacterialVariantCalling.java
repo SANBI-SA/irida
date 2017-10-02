@@ -48,10 +48,10 @@ public class AnalysisSANBIBacterialVariantCalling extends Analysis {
 	public AnalysisOutputFile getSANBIVariantCallGenomeCov() {
 		return getAnalysisOutputFile("genomecov_file");
 	}
-	@JsonIgnore
+/*	@JsonIgnore
 	public AnalysisOutputFile getSANBIVariantCallMetricsFile() {
 		return getAnalysisOutputFile("metrics_file");
-	}
+	}*/
 	@JsonIgnore
 	public AnalysisOutputFile getSANBIVariantCallMarkDuplicateFile() {
 		return getAnalysisOutputFile("markduplicates_outFile");
