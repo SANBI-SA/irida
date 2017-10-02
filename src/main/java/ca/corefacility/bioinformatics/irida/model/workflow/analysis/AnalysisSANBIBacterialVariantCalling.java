@@ -28,9 +28,40 @@ public class AnalysisSANBIBacterialVariantCalling extends Analysis {
 			final Map<String, AnalysisOutputFile> analysisOutputFilesMap) {
 		super(executionManagerAnalysisId, analysisOutputFilesMap);
 	}
-
 	@JsonIgnore
-	public AnalysisOutputFile getSANBIVariantCallResults() {
+	public AnalysisOutputFile getSANBIVariantCallTree() {
 		return getAnalysisOutputFile("output_tree");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallOutputAlignment() {
+		return getAnalysisOutputFile("output_alignment");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallSnpeffVcf() {
+		return getAnalysisOutputFile("snpeff_output_vcf");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallFreebayesVcf() {
+		return getAnalysisOutputFile("freebayes_output_vcf");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallGenomeCov() {
+		return getAnalysisOutputFile("genomecov_file");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallMetricsFile() {
+		return getAnalysisOutputFile("metrics_file");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallMarkDuplicateFile() {
+		return getAnalysisOutputFile("markduplicates_outFile");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallCollectAlignSummary() {
+		return getAnalysisOutputFile("collect_align_summary_outfile");
+	}
+	@JsonIgnore
+	public AnalysisOutputFile getSANBIVariantCallNovoAlign() {
+		return getAnalysisOutputFile("novoalign_file");
 	}
 }
