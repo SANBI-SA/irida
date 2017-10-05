@@ -20,8 +20,8 @@
 	<outputs>
 		<output name="novoalign_file" fileName="novoalign_file.bam" />
 		<output name="collect_align_summary_outfile" fileName="collect_align_summary_outfile" />
-		<output name="markduplicates_outFile" fileName="markduplicates_outFile.bam" />
-		<output name="metrics_file" fileName="metrics_file.txt" />
+		<output name="markduplicates_outFile" fileName="markduplicates_outfile.bam" />
+		<!--<output name="metrics_file" fileName="metrics_file.txt" />-->
 		<output name="genomecov_file" fileName="genomecov_file" />
 		<output name="freebayes_output_vcf" fileName="freebayes_output_vcf" />
 		<output name="snpeff_output_vcf" fileName="snpeff_output_vcf" />

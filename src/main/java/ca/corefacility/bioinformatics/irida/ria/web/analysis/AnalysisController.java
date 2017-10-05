@@ -223,7 +223,7 @@ public class AnalysisController {
 		 */
 		try {
 			if (submission.getAnalysisState().equals(AnalysisState.COMPLETED)) {
-				if (analysisType.equals(AnalysisType.PHYLOGENOMICS)) {
+				if (analysisType.equals(AnalysisType.PHYLOGENOMICS) || analysisType.equals(AnalysisType.SANBI_BACTERIAL_VARIANT_CALLING)) {
 					tree(submission, model);
 				} else if (analysisType.equals(AnalysisType.SISTR_TYPING)) {
 					model.addAttribute("sistr", true);
