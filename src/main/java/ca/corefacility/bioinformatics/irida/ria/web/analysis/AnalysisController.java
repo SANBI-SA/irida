@@ -72,6 +72,7 @@ import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.Analysis;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisOutputFile;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisPhylogenomicsPipeline;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisSANBIBacterialVariantCalling;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisSISTRTyping;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.ProjectAnalysisSubmissionJoin;
@@ -223,8 +224,10 @@ public class AnalysisController {
 		 */
 		try {
 			if (submission.getAnalysisState().equals(AnalysisState.COMPLETED)) {
-				if (analysisType.equals(AnalysisType.PHYLOGENOMICS) || analysisType.equals(AnalysisType.SANBI_BACTERIAL_VARIANT_CALLING)) {
+				if (analysisType.equals(AnalysisType.PHYLOGENOMICS)) {
 					tree(submission, model);
+				} else if (analysisType.equals(AnalysisType.SANBI_BACTERIAL_VARIANT_CALLING)) {
+					bvc_tree(submission, model);
 				} else if (analysisType.equals(AnalysisType.SISTR_TYPING)) {
 					model.addAttribute("sistr", true);
 				}
@@ -354,6 +357,33 @@ public class AnalysisController {
 		model.addAttribute("preview", "tree");
 	}
 	
+	// ************************************************************************************************
+	// Analysis view setup
+	// ************************************************************************************************
+
+	/**
+	 * Construct the model parameters for an
+	 * {@link AnalysisSANBIBacteriaVariantCalling}
+	 * 
+	 * @param submission
+	 *            The analysis submission
+	 * @param model
+	 *            The model to add parameters
+	 * @throws IOException
+	 *             If the tree file couldn't be read
+	 */
+	private void bvc_tree(AnalysisSubmission submission, Model model) throws IOException {
+		AnalysisSANBIBacterialVariantCalling analysis = (AnalysisSANBIBacterialVariantCalling) submission.getAnalysis();
+		AnalysisOutputFile file = analysis.getSANBIVariantCallTree();
+		List<String> lines = Files.readAllLines(file.getFile());
+		model.addAttribute("analysis", analysis);
+		model.addAttribute("newick", lines.get(0));
+
+		// inform the view to display the tree preview
+		model.addAttribute("preview", "tree");
+	}
+	
+
 	/**
 	 * Get the list of all {@link AnalysisSubmission}s in the system
 	 * 
