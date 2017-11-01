@@ -2,11 +2,12 @@
     "a_galaxy_workflow": "true", 
     "annotation": "snvphyl", 
     "format-version": "0.1", 
-    "name": "SNVPhyl v1.0.1 Paired-End", 
+    "name": "SNVPhyl v1.0.1 Paired-End'", 
     "steps": {
         "0": {
             "annotation": "", 
             "content_id": null, 
+            "errors": null, 
             "id": 0, 
             "input_connections": {}, 
             "inputs": [
@@ -15,14 +16,13 @@
                     "name": "sequence_reads_paired"
                 }
             ], 
-            "label": null, 
+            "label": "sequence_reads_paired", 
             "name": "Input dataset collection", 
             "outputs": [], 
             "position": {
                 "left": 200, 
                 "top": 200
             }, 
-            "tool_errors": null, 
             "tool_id": null, 
             "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"sequence_reads_paired\"}", 
             "tool_version": null, 
@@ -39,6 +39,7 @@
         "1": {
             "annotation": "", 
             "content_id": null, 
+            "errors": null, 
             "id": 1, 
             "input_connections": {}, 
             "inputs": [
@@ -47,14 +48,13 @@
                     "name": "reference"
                 }
             ], 
-            "label": null, 
+            "label": "reference", 
             "name": "Input dataset", 
             "outputs": [], 
             "position": {
                 "left": 200, 
-                "top": 285
+                "top": 302
             }, 
-            "tool_errors": null, 
             "tool_id": null, 
             "tool_state": "{\"name\": \"reference\"}", 
             "tool_version": null, 
@@ -71,6 +71,7 @@
         "2": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_index/smalt_index/1.1.0", 
+            "errors": null, 
             "id": 2, 
             "input_connections": {
                 "reference": {
@@ -78,7 +79,12 @@
                     "output_name": "output"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool smalt index", 
+                    "name": "reference"
+                }
+            ], 
             "label": null, 
             "name": "smalt index", 
             "outputs": [
@@ -92,7 +98,7 @@
                 }
             ], 
             "position": {
-                "left": 479, 
+                "left": 464, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -107,9 +113,14 @@
                     "output_name": "output2"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_index/smalt_index/1.1.0", 
-            "tool_state": "{\"__page__\": 0, \"k\": \"\\\"13\\\"\", \"__rerun_remap_job_id__\": null, \"s\": \"\\\"6\\\"\", \"reference\": \"null\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "1e249f90f2a6", 
+                "name": "smalt_index", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"k\": \"\\\"13\\\"\", \"__rerun_remap_job_id__\": null, \"s\": \"\\\"6\\\"\", \"reference\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.1.0", 
             "type": "tool", 
             "uuid": "713fb2c8-84dd-4762-8281-e071c61fe979", 
@@ -118,6 +129,7 @@
         "3": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/find_repeats/findrepeat/1.8.0", 
+            "errors": null, 
             "id": 3, 
             "input_connections": {
                 "fasta": {
@@ -125,7 +137,12 @@
                     "output_name": "output"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Find Repeats", 
+                    "name": "fasta"
+                }
+            ], 
             "label": null, 
             "name": "Find Repeats", 
             "outputs": [
@@ -135,7 +152,7 @@
                 }
             ], 
             "position": {
-                "left": 479, 
+                "left": 464, 
                 "top": 341
             }, 
             "post_job_actions": {
@@ -154,9 +171,14 @@
                     "output_name": "out"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/find_repeats/findrepeat/1.8.0", 
-            "tool_state": "{\"__page__\": 0, \"fasta\": \"null\", \"__rerun_remap_job_id__\": null, \"pid\": \"\\\"90\\\"\", \"length\": \"\\\"150\\\"\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "ab7b9169e516", 
+                "name": "find_repeats", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"length\": \"\\\"150\\\"\", \"__rerun_remap_job_id__\": null, \"pid\": \"\\\"90\\\"\", \"fasta\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.8.0", 
             "type": "tool", 
             "uuid": "3c2257f4-d708-47c4-934e-7a027804f7db", 
@@ -171,6 +193,7 @@
         "4": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_map/smalt_map/1.1.0", 
+            "errors": null, 
             "id": 4, 
             "input_connections": {
                 "singlePaired|fastq_collection": {
@@ -186,7 +209,24 @@
                     "output_name": "output"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "singlePaired"
+                }, 
+                {
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "insfil"
+                }, 
+                {
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "smi"
+                }, 
+                {
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "sma"
+                }
+            ], 
             "label": null, 
             "name": "smalt map", 
             "outputs": [
@@ -196,7 +236,7 @@
                 }
             ], 
             "position": {
-                "left": 707, 
+                "left": 692, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -206,9 +246,14 @@
                     "output_name": "output"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_map/smalt_map/1.1.0", 
-            "tool_state": "{\"minbasq\": \"\\\"\\\"\", \"__page__\": 0, \"insertmin\": \"\\\"20\\\"\", \"mincover\": \"\\\"\\\"\", \"insfil\": \"null\", \"scordiff\": \"\\\"\\\"\", \"insertmax\": \"\\\"1000\\\"\", \"singlePaired\": \"{\\\"fastq_collection\\\": null, \\\"sPaired\\\": \\\"collections\\\", \\\"pairtype\\\": \\\"pe\\\", \\\"__current_case__\\\": 2}\", \"minid\": \"\\\"0.5\\\"\", \"__rerun_remap_job_id__\": null, \"search_harder\": \"\\\"False\\\"\", \"seed\": \"\\\"1\\\"\", \"sw_weighted\": \"\\\"False\\\"\", \"smi\": \"null\", \"oformat\": \"{\\\"bamOptions\\\": null, \\\"outformat\\\": \\\"bam\\\", \\\"__current_case__\\\": 1}\", \"minscor\": \"\\\"\\\"\", \"sma\": \"null\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "62faa1906fd7", 
+                "name": "smalt_map", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"minbasq\": \"\\\"\\\"\", \"__page__\": 0, \"insertmin\": \"\\\"20\\\"\", \"mincover\": \"\\\"\\\"\", \"singlePaired\": \"{\\\"fastq_collection\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"sPaired\\\": \\\"collections\\\", \\\"pairtype\\\": \\\"pe\\\", \\\"__current_case__\\\": 2}\", \"scordiff\": \"\\\"\\\"\", \"minscor\": \"\\\"\\\"\", \"insfil\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"minid\": \"\\\"0.5\\\"\", \"__rerun_remap_job_id__\": null, \"search_harder\": \"\\\"false\\\"\", \"seed\": \"\\\"1\\\"\", \"sw_weighted\": \"\\\"false\\\"\", \"smi\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"oformat\": \"{\\\"bamOptions\\\": null, \\\"outformat\\\": \\\"bam\\\", \\\"__current_case__\\\": 1}\", \"insertmax\": \"\\\"1000\\\"\", \"sma\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.1.0", 
             "type": "tool", 
             "uuid": "7a4b9431-20a8-429d-a26e-433f0827c463", 
@@ -217,6 +262,7 @@
         "5": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/verify_map/verify_map/1.8.0", 
+            "errors": null, 
             "id": 5, 
             "input_connections": {
                 "bams": {
@@ -224,7 +270,12 @@
                     "output_name": "output"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Verify Mapping Quality", 
+                    "name": "bams"
+                }
+            ], 
             "label": null, 
             "name": "Verify Mapping Quality", 
             "outputs": [
@@ -234,7 +285,7 @@
                 }
             ], 
             "position": {
-                "left": 1011, 
+                "left": 976, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -246,9 +297,14 @@
                     "output_name": "output_log"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/verify_map/verify_map/1.8.0", 
-            "tool_state": "{\"minmap\": \"\\\"80\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"mindepth\": \"\\\"${min_coverage}\\\"\", \"bams\": \"null\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "c50b63008cc9", 
+                "name": "verify_map", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"minmap\": \"\\\"80\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"mindepth\": \"\\\"${min_coverage}\\\"\", \"bams\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.8.0", 
             "type": "tool", 
             "uuid": "82bed622-a144-43fd-869e-c4468e6131ff", 
@@ -263,6 +319,7 @@
         "6": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/freebayes/freebayes/0.4.1", 
+            "errors": null, 
             "id": 6, 
             "input_connections": {
                 "reference_source|input_bams_0|input_bam": {
@@ -274,7 +331,12 @@
                     "output_name": "output"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool FreeBayes", 
+                    "name": "reference_source"
+                }
+            ], 
             "label": null, 
             "name": "FreeBayes", 
             "outputs": [
@@ -292,7 +354,7 @@
                 }
             ], 
             "position": {
-                "left": 1011, 
+                "left": 976, 
                 "top": 313
             }, 
             "post_job_actions": {
@@ -312,9 +374,14 @@
                     "output_name": "output_vcf"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/freebayes/freebayes/0.4.1", 
-            "tool_state": "{\"__page__\": 0, \"reference_source\": \"{\\\"ref_file\\\": null, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": null}], \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"options_type\": \"{\\\"options_type_selector\\\": \\\"full\\\", \\\"allele_scope\\\": {\\\"__current_case__\\\": 1, \\\"allele_scope_selector\\\": \\\"False\\\"}, \\\"reporting\\\": {\\\"reporting_selector\\\": \\\"False\\\", \\\"__current_case__\\\": 1}, \\\"genotype_likelihoods\\\": {\\\"genotype_likelihoods_selector\\\": \\\"False\\\", \\\"__current_case__\\\": 1}, \\\"O\\\": \\\"False\\\", \\\"population_model\\\": {\\\"K\\\": \\\"False\\\", \\\"J\\\": \\\"False\\\", \\\"P\\\": \\\"1\\\", \\\"T\\\": \\\"0.001\\\", \\\"__current_case__\\\": 0, \\\"population_model_selector\\\": \\\"True\\\"}, \\\"reference_allele\\\": {\\\"reference_allele_selector\\\": \\\"False\\\", \\\"__current_case__\\\": 1}, \\\"optional_inputs\\\": {\\\"optional_inputs_selector\\\": \\\"False\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 0, \\\"population_mappability_priors\\\": {\\\"population_mappability_priors_selector\\\": \\\"False\\\", \\\"__current_case__\\\": 1}, \\\"input_filters\\\": {\\\"input_filters_selector\\\": \\\"False\\\", \\\"__current_case__\\\": 1}, \\\"algorithmic_features\\\": {\\\"algorithmic_features_selector\\\": \\\"False\\\", \\\"__current_case__\\\": 1}}\", \"target_limit_type\": \"{\\\"target_limit_type_selector\\\": \\\"do_not_limit\\\", \\\"__current_case__\\\": 0}\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "85b0800adde2", 
+                "name": "freebayes", 
+                "owner": "devteam", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}], \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"options_type\": \"{\\\"options_type_selector\\\": \\\"full\\\", \\\"allele_scope\\\": {\\\"__current_case__\\\": 1, \\\"allele_scope_selector\\\": \\\"false\\\"}, \\\"reporting\\\": {\\\"reporting_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"genotype_likelihoods\\\": {\\\"__current_case__\\\": 1, \\\"genotype_likelihoods_selector\\\": \\\"false\\\"}, \\\"O\\\": \\\"false\\\", \\\"population_model\\\": {\\\"K\\\": \\\"false\\\", \\\"J\\\": \\\"false\\\", \\\"P\\\": \\\"1\\\", \\\"T\\\": \\\"0.001\\\", \\\"__current_case__\\\": 0, \\\"population_model_selector\\\": \\\"true\\\"}, \\\"reference_allele\\\": {\\\"reference_allele_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"optional_inputs\\\": {\\\"optional_inputs_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 0, \\\"population_mappability_priors\\\": {\\\"__current_case__\\\": 1, \\\"population_mappability_priors_selector\\\": \\\"false\\\"}, \\\"input_filters\\\": {\\\"input_filters_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"algorithmic_features\\\": {\\\"algorithmic_features_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}}\", \"target_limit_type\": \"{\\\"target_limit_type_selector\\\": \\\"do_not_limit\\\", \\\"__current_case__\\\": 0}\"}", 
             "tool_version": "0.4.1", 
             "type": "tool", 
             "uuid": "880cb192-d299-4736-af89-2b0df9977514", 
@@ -323,6 +390,7 @@
         "7": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/samtools_mpileup/samtools_mpileup/2.0", 
+            "errors": null, 
             "id": 7, 
             "input_connections": {
                 "reference_source|input_bams_0|input_bam": {
@@ -334,7 +402,12 @@
                     "output_name": "output"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool MPileup", 
+                    "name": "reference_source"
+                }
+            ], 
             "label": null, 
             "name": "MPileup", 
             "outputs": [
@@ -348,8 +421,8 @@
                 }
             ], 
             "position": {
-                "left": 1011, 
-                "top": 541
+                "left": 976, 
+                "top": 535
             }, 
             "post_job_actions": {
                 "HideDatasetActionoutput_log": {
@@ -363,9 +436,14 @@
                     "output_name": "output_mpileup"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/samtools_mpileup/samtools_mpileup/2.0", 
-            "tool_state": "{\"__page__\": 0, \"advanced_options\": \"{\\\"max_reads_per_bam\\\": \\\"1024\\\", \\\"advanced_options_selector\\\": \\\"advanced\\\", \\\"extended_BAQ_computation\\\": \\\"False\\\", \\\"region_string\\\": \\\"\\\", \\\"limit_by_region\\\": {\\\"limit_by_regions\\\": \\\"no_limit\\\", \\\"__current_case__\\\": 2}, \\\"disable_probabilistic_realignment\\\": \\\"True\\\", \\\"skip_anomalous_read_pairs\\\": \\\"True\\\", \\\"minimum_mapping_quality\\\": \\\"0\\\", \\\"filter_by_flags\\\": {\\\"filter_flags\\\": \\\"nofilter\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 0, \\\"coefficient_for_downgrading\\\": \\\"0\\\", \\\"minimum_base_quality\\\": \\\"0\\\", \\\"ignore_overlaps\\\": \\\"False\\\", \\\"exclude_read_group\\\": {\\\"__current_case__\\\": 2, \\\"exclude_read_groups\\\": \\\"no_limit\\\"}}\", \"__rerun_remap_job_id__\": null, \"genotype_likelihood_computation_type\": \"{\\\"__current_case__\\\": 0, \\\"output_format\\\": \\\"--VCF\\\", \\\"perform_indel_calling\\\": {\\\"__current_case__\\\": 2, \\\"perform_indel_calling_selector\\\": \\\"do_not_perform_indel_calling\\\"}, \\\"compressed\\\": \\\"False\\\", \\\"genotype_likelihood_computation_type_selector\\\": \\\"perform_genotype_likelihood_computation\\\", \\\"output_tags\\\": null}\", \"reference_source\": \"{\\\"ref_file\\\": null, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": null}], \\\"__current_case__\\\": 1}\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "81948c6e4d4d", 
+                "name": "samtools_mpileup", 
+                "owner": "devteam", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": null, \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}], \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"genotype_likelihood_computation_type\": \"{\\\"genotype_likelihood_computation_type_selector\\\": \\\"perform_genotype_likelihood_computation\\\", \\\"output_format\\\": \\\"--VCF\\\", \\\"perform_indel_calling\\\": {\\\"__current_case__\\\": 2, \\\"perform_indel_calling_selector\\\": \\\"do_not_perform_indel_calling\\\"}, \\\"compressed\\\": \\\"false\\\", \\\"__current_case__\\\": 0, \\\"output_tags\\\": null}\", \"advanced_options\": \"{\\\"max_reads_per_bam\\\": \\\"1024\\\", \\\"advanced_options_selector\\\": \\\"advanced\\\", \\\"extended_BAQ_computation\\\": \\\"false\\\", \\\"region_string\\\": \\\"\\\", \\\"limit_by_region\\\": {\\\"limit_by_regions\\\": \\\"no_limit\\\", \\\"__current_case__\\\": 2}, \\\"disable_probabilistic_realignment\\\": \\\"true\\\", \\\"skip_anomalous_read_pairs\\\": \\\"true\\\", \\\"minimum_mapping_quality\\\": \\\"0\\\", \\\"filter_by_flags\\\": {\\\"__current_case__\\\": 1, \\\"filter_flags\\\": \\\"nofilter\\\"}, \\\"__current_case__\\\": 0, \\\"coefficient_for_downgrading\\\": \\\"0\\\", \\\"minimum_base_quality\\\": \\\"0\\\", \\\"ignore_overlaps\\\": \\\"false\\\", \\\"exclude_read_group\\\": {\\\"__current_case__\\\": 2, \\\"exclude_read_groups\\\": \\\"no_limit\\\"}}\"}", 
             "tool_version": "2.0", 
             "type": "tool", 
             "uuid": "55cf9f84-3f62-47fc-8828-916a3ca8779d", 
@@ -374,6 +452,7 @@
         "8": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_vcf/filtervcf/1.8.0", 
+            "errors": null, 
             "id": 8, 
             "input_connections": {
                 "vcf": {
@@ -381,7 +460,12 @@
                     "output_name": "output_vcf"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Filter vcf", 
+                    "name": "vcf"
+                }
+            ], 
             "label": null, 
             "name": "Filter vcf", 
             "outputs": [
@@ -391,7 +475,7 @@
                 }
             ], 
             "position": {
-                "left": 1339, 
+                "left": 1304, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -401,9 +485,14 @@
                     "output_name": "vcfout"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_vcf/filtervcf/1.8.0", 
-            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"vcf\": \"null\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "dc4f6d16339c", 
+                "name": "filter_vcf", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"vcf\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.8.0", 
             "type": "tool", 
             "uuid": "92790084-218f-4ad5-bdbb-5925d0b63cdc", 
@@ -412,6 +501,7 @@
         "9": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_call/bcftools_call/1.0.1", 
+            "errors": null, 
             "id": 9, 
             "input_connections": {
                 "input": {
@@ -419,7 +509,12 @@
                     "output_name": "output_mpileup"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool BCFtools call", 
+                    "name": "input"
+                }
+            ], 
             "label": null, 
             "name": "BCFtools call", 
             "outputs": [
@@ -429,8 +524,8 @@
                 }
             ], 
             "position": {
-                "left": 1339, 
-                "top": 321
+                "left": 1304, 
+                "top": 318
             }, 
             "post_job_actions": {
                 "HideDatasetActionoutput": {
@@ -446,9 +541,14 @@
                     "output_name": "output"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_call/bcftools_call/1.0.1", 
-            "tool_state": "{\"__page__\": 0, \"constraint\": \"\\\"-C alleles\\\"\", \"filter_calls\": \"{\\\"filter_calls_selector\\\": \\\"no_filter\\\", \\\"__current_case__\\\": 0}\", \"output_format\": \"\\\"b\\\"\", \"caller\": \"\\\"-c\\\"\", \"skip_indels_snvs\": \"\\\"\\\"\", \"input\": \"null\", \"variants_only\": \"\\\"False\\\"\", \"__rerun_remap_job_id__\": null}", 
+            "tool_shed_repository": {
+                "changeset_revision": "98f8a44014c1", 
+                "name": "bcftools_call", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"constraint\": \"\\\"-C alleles\\\"\", \"filter_calls\": \"{\\\"filter_calls_selector\\\": \\\"no_filter\\\", \\\"__current_case__\\\": 0}\", \"output_format\": \"\\\"b\\\"\", \"caller\": \"\\\"-c\\\"\", \"skip_indels_snvs\": \"\\\"\\\"\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"variants_only\": \"\\\"false\\\"\", \"__rerun_remap_job_id__\": null}", 
             "tool_version": "1.0.1", 
             "type": "tool", 
             "uuid": "59cba723-cc03-4bc7-a38f-ef5df3c848b2", 
@@ -457,6 +557,7 @@
         "10": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_view/bcftools_view/0.1.1", 
+            "errors": null, 
             "id": 10, 
             "input_connections": {
                 "input": {
@@ -464,7 +565,12 @@
                     "output_name": "vcfout"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool bcftools_view", 
+                    "name": "input"
+                }
+            ], 
             "label": null, 
             "name": "bcftools_view", 
             "outputs": [
@@ -474,7 +580,7 @@
                 }
             ], 
             "position": {
-                "left": 1667, 
+                "left": 1618, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -491,9 +597,14 @@
                     "output_name": "output"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_view/bcftools_view/0.1.1", 
-            "tool_state": "{\"max_nref\": \"\\\"\\\"\", \"__page__\": 0, \"filters\": \"\\\"\\\"\", \"output_format\": \"\\\"b\\\"\", \"header_option\": \"\\\"all\\\"\", \"min_nref\": \"\\\"\\\"\", \"select_sites\": \"null\", \"__rerun_remap_job_id__\": null, \"private\": \"null\", \"samples\": \"\\\"\\\"\", \"include_types\": \"null\", \"region\": \"\\\"\\\"\", \"input\": \"null\", \"trim_alt_alleles\": \"\\\"False\\\"\", \"sites_no_genotype\": \"\\\"off\\\"\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "3628f89cb4ee", 
+                "name": "bcftools_view", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"max_nref\": \"\\\"\\\"\", \"__page__\": 0, \"samples\": \"\\\"\\\"\", \"output_format\": \"\\\"b\\\"\", \"header_option\": \"\\\"all\\\"\", \"min_nref\": \"\\\"\\\"\", \"sites_no_genotype\": \"\\\"off\\\"\", \"select_sites\": \"null\", \"__rerun_remap_job_id__\": null, \"private\": \"null\", \"filters\": \"\\\"\\\"\", \"include_types\": \"null\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"trim_alt_alleles\": \"\\\"False\\\"\", \"region\": \"\\\"\\\"\"}", 
             "tool_version": "0.1.1", 
             "type": "tool", 
             "uuid": "59aede98-a211-4fcc-aad3-bfb6e99cf25e", 
@@ -502,6 +613,7 @@
         "11": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/consolidate_vcfs/consolidate_vcfs/1.8.0", 
+            "errors": null, 
             "id": 11, 
             "input_connections": {
                 "freebayes": {
@@ -513,7 +625,16 @@
                     "output_name": "output"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Consolidate VCFs", 
+                    "name": "mpileup"
+                }, 
+                {
+                    "description": "runtime parameter for tool Consolidate VCFs", 
+                    "name": "freebayes"
+                }
+            ], 
             "label": null, 
             "name": "Consolidate VCFs", 
             "outputs": [
@@ -527,7 +648,7 @@
                 }
             ], 
             "position": {
-                "left": 1995, 
+                "left": 1932, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -542,9 +663,14 @@
                     "output_name": "filtered_density"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/consolidate_vcfs/consolidate_vcfs/1.8.0", 
-            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"use_density_filter\": \"{\\\"select_list\\\": \\\"yes\\\", \\\"threshold\\\": \\\"2\\\", \\\"window_size\\\": \\\"500\\\", \\\"__current_case__\\\": 0}\", \"mpileup\": \"null\", \"mean_mapping\": \"\\\"${min_mean_mapping}\\\"\", \"coverage\": \"\\\"${min_coverage}\\\"\", \"snv_abundance_ratio\": \"\\\"${snv_abundance_ratio}\\\"\", \"freebayes\": \"null\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "924d0f651195", 
+                "name": "consolidate_vcfs", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"snv_abundance_ratio\": \"\\\"${snv_abundance_ratio}\\\"\", \"__rerun_remap_job_id__\": null, \"use_density_filter\": \"{\\\"select_list\\\": \\\"yes\\\", \\\"threshold\\\": \\\"2\\\", \\\"window_size\\\": \\\"500\\\", \\\"__current_case__\\\": 0}\", \"mpileup\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"coverage\": \"\\\"${min_coverage}\\\"\", \"mean_mapping\": \"\\\"${min_mean_mapping}\\\"\", \"freebayes\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.8.0", 
             "type": "tool", 
             "uuid": "20d83b1e-ea37-48e3-b78d-56baf1021e6e", 
@@ -553,6 +679,7 @@
         "12": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/collapse_collections/collapse_dataset/1.0", 
+            "errors": null, 
             "id": 12, 
             "input_connections": {
                 "input_list": {
@@ -560,7 +687,12 @@
                     "output_name": "filtered_density"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Collapse Collection", 
+                    "name": "input_list"
+                }
+            ], 
             "label": null, 
             "name": "Collapse Collection", 
             "outputs": [
@@ -570,7 +702,7 @@
                 }
             ], 
             "position": {
-                "left": 2261, 
+                "left": 2188, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -580,9 +712,14 @@
                     "output_name": "output"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/collapse_collections/collapse_dataset/1.0", 
-            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"input_list\": \"null\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "7e5a39b5dad3", 
+                "name": "collapse_collections", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"input_list\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.0", 
             "type": "tool", 
             "uuid": "7ebe1271-3c71-4cc9-94c9-9867061a736b", 
@@ -591,6 +728,7 @@
         "13": {
             "annotation": "", 
             "content_id": "cat1", 
+            "errors": null, 
             "id": 13, 
             "input_connections": {
                 "input1": {
@@ -602,7 +740,12 @@
                     "output_name": "out"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Concatenate datasets", 
+                    "name": "input1"
+                }
+            ], 
             "label": null, 
             "name": "Concatenate datasets", 
             "outputs": [
@@ -612,7 +755,7 @@
                 }
             ], 
             "position": {
-                "left": 2589, 
+                "left": 2516, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -624,9 +767,8 @@
                     "output_name": "out_file1"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "cat1", 
-            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"input1\": \"null\", \"queries\": \"[{\\\"input2\\\": null, \\\"__index__\\\": 0}]\"}", 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"input1\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"queries\": \"[{\\\"input2\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"__index__\\\": 0}]\"}", 
             "tool_version": "1.0.0", 
             "type": "tool", 
             "uuid": "a570e64e-70ef-47aa-868a-0f6f9482bafb", 
@@ -641,6 +783,7 @@
         "14": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/vcf2snvalignment/vcf2snvalignment/1.8.0", 
+            "errors": null, 
             "id": 14, 
             "input_connections": {
                 "invalid": {
@@ -656,7 +799,20 @@
                     "output_name": "bcf_combined"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool VCF 2 snvalignment", 
+                    "name": "vcf_collection"
+                }, 
+                {
+                    "description": "runtime parameter for tool VCF 2 snvalignment", 
+                    "name": "ref_fasta"
+                }, 
+                {
+                    "description": "runtime parameter for tool VCF 2 snvalignment", 
+                    "name": "invalid"
+                }
+            ], 
             "label": null, 
             "name": "VCF 2 snvalignment", 
             "outputs": [
@@ -678,7 +834,7 @@
                 }
             ], 
             "position": {
-                "left": 2857, 
+                "left": 2774, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -707,9 +863,14 @@
                     "output_name": "vcf2core"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/vcf2snvalignment/vcf2snvalignment/1.8.0", 
-            "tool_state": "{\"__page__\": 0, \"ref_fasta\": \"null\", \"strain_list\": \"{\\\"select_list\\\": \\\"all\\\", \\\"__current_case__\\\": 2}\", \"reference\": \"\\\"reference\\\"\", \"__rerun_remap_job_id__\": null, \"invalid\": \"null\", \"vcf_collection\": \"null\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "4c99f0d32983", 
+                "name": "vcf2snvalignment", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"ref_fasta\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"strain_list\": \"{\\\"select_list\\\": \\\"all\\\", \\\"__current_case__\\\": 2}\", \"reference\": \"\\\"reference\\\"\", \"__rerun_remap_job_id__\": null, \"invalid\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"vcf_collection\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "1.8.0", 
             "type": "tool", 
             "uuid": "3bcc5ef2-aa54-4a91-9b70-c57cf47b5bea", 
@@ -729,6 +890,7 @@
         "15": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/jjohnson/regex_find_replace/regex1/0.1.0", 
+            "errors": null, 
             "id": 15, 
             "input_connections": {
                 "input": {
@@ -736,7 +898,12 @@
                     "output_name": "phylip"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Regex Find And Replace", 
+                    "name": "input"
+                }
+            ], 
             "label": null, 
             "name": "Regex Find And Replace", 
             "outputs": [
@@ -746,7 +913,7 @@
                 }
             ], 
             "position": {
-                "left": 3116, 
+                "left": 3023, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -758,9 +925,14 @@
                     "output_name": "out_file1"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/jjohnson/regex_find_replace/regex1/0.1.0", 
-            "tool_state": "{\"input\": \"null\", \"__rerun_remap_job_id__\": null, \"checks\": \"[{\\\"__index__\\\": 0, \\\"replacement\\\": \\\"\\\", \\\"pattern\\\": \\\"'\\\"}]\", \"__page__\": 0}", 
+            "tool_shed_repository": {
+                "changeset_revision": "3205c22bc968", 
+                "name": "regex_find_replace", 
+                "owner": "jjohnson", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"checks\": \"[{\\\"__index__\\\": 0, \\\"replacement\\\": \\\"\\\", \\\"pattern\\\": \\\"'\\\"}]\", \"__page__\": 0}", 
             "tool_version": "0.1.0", 
             "type": "tool", 
             "uuid": "1134975e-7d95-4ca8-ae69-14732e8ced29", 
@@ -775,6 +947,7 @@
         "16": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_stats/filterstat/1.8.0", 
+            "errors": null, 
             "id": 16, 
             "input_connections": {
                 "tabfile": {
@@ -782,7 +955,12 @@
                     "output_name": "positions"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Filter Stats", 
+                    "name": "tabfile"
+                }
+            ], 
             "label": null, 
             "name": "Filter Stats", 
             "outputs": [
@@ -792,7 +970,7 @@
                 }
             ], 
             "position": {
-                "left": 3116, 
+                "left": 3023, 
                 "top": 313
             }, 
             "post_job_actions": {
@@ -804,9 +982,14 @@
                     "output_name": "out"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_stats/filterstat/1.8.0", 
-            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"tabfile\": \"null\", \"summary\": \"[\\\"invalids\\\"]\"}", 
+            "tool_shed_repository": {
+                "changeset_revision": "416082f5d12d", 
+                "name": "filter_stats", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"tabfile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"summary\": \"[\\\"invalids\\\"]\"}", 
             "tool_version": "1.8.0", 
             "type": "tool", 
             "uuid": "157fd5be-539c-44f6-b534-d6c7aeef72de", 
@@ -821,6 +1004,7 @@
         "17": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/phyml/phyml1/3.1.1", 
+            "errors": null, 
             "id": 17, 
             "input_connections": {
                 "input": {
@@ -828,7 +1012,12 @@
                     "output_name": "out_file1"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool PhyML", 
+                    "name": "input"
+                }
+            ], 
             "label": null, 
             "name": "PhyML", 
             "outputs": [
@@ -842,7 +1031,7 @@
                 }
             ], 
             "position": {
-                "left": 3444, 
+                "left": 3347, 
                 "top": 200
             }, 
             "post_job_actions": {
@@ -868,9 +1057,14 @@
                     "output_name": "output_tree"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/phyml/phyml1/3.1.1", 
-            "tool_state": "{\"datatype_condition\": \"{\\\"tstv\\\": \\\"e\\\", \\\"model\\\": \\\"GTR\\\", \\\"type\\\": \\\"nt\\\", \\\"__current_case__\\\": 0}\", \"search\": \"\\\"BEST\\\"\", \"__page__\": 0, \"gamma_condition\": \"{\\\"shape\\\": \\\"e\\\", \\\"categories\\\": \\\"4\\\", \\\"gamma\\\": \\\"yes\\\", \\\"__current_case__\\\": 0}\", \"support_condition\": \"{\\\"support\\\": \\\"sh\\\", \\\"__current_case__\\\": 0}\", \"random_condition\": \"{\\\"random\\\": \\\"no\\\", \\\"__current_case__\\\": 1}\", \"prop_invar\": \"\\\"0.0\\\"\", \"input\": \"null\", \"__rerun_remap_job_id__\": null}", 
+            "tool_shed_repository": {
+                "changeset_revision": "fdb1cddf0dbd", 
+                "name": "phyml", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"prop_invar\": \"\\\"0.0\\\"\", \"search\": \"\\\"BEST\\\"\", \"__page__\": 0, \"gamma_condition\": \"{\\\"shape\\\": \\\"e\\\", \\\"categories\\\": \\\"4\\\", \\\"__current_case__\\\": 0, \\\"gamma\\\": \\\"yes\\\"}\", \"support_condition\": \"{\\\"support\\\": \\\"sh\\\", \\\"__current_case__\\\": 0}\", \"random_condition\": \"{\\\"random\\\": \\\"no\\\", \\\"__current_case__\\\": 1}\", \"datatype_condition\": \"{\\\"tstv\\\": \\\"e\\\", \\\"model\\\": \\\"GTR\\\", \\\"type\\\": \\\"nt\\\", \\\"__current_case__\\\": 0}\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null}", 
             "tool_version": "3.1.1", 
             "type": "tool", 
             "uuid": "c525fb6c-19a0-416b-a5c2-2a2cd0e9f19f", 
@@ -890,6 +1084,7 @@
         "18": {
             "annotation": "", 
             "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/snv_matrix/snvmatrix/1.8.0", 
+            "errors": null, 
             "id": 18, 
             "input_connections": {
                 "phylip": {
@@ -897,7 +1092,12 @@
                     "output_name": "out_file1"
                 }
             }, 
-            "inputs": [], 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool SNV Matrix", 
+                    "name": "phylip"
+                }
+            ], 
             "label": null, 
             "name": "SNV Matrix", 
             "outputs": [
@@ -907,7 +1107,7 @@
                 }
             ], 
             "position": {
-                "left": 3444, 
+                "left": 3347, 
                 "top": 358
             }, 
             "post_job_actions": {
@@ -919,9 +1119,14 @@
                     "output_name": "out"
                 }
             }, 
-            "tool_errors": null, 
             "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/snv_matrix/snvmatrix/1.8.0", 
-            "tool_state": "{\"__page__\": 0, \"phylip\": \"null\", \"__rerun_remap_job_id__\": null}", 
+            "tool_shed_repository": {
+                "changeset_revision": "ef76fcf5a209", 
+                "name": "snv_matrix", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"phylip\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null}", 
             "tool_version": "1.8.0", 
             "type": "tool", 
             "uuid": "19028cf9-fd41-470b-8cc7-f987db36fcfe", 
@@ -934,5 +1139,5 @@
             ]
         }
     }, 
-    "uuid": "3400a6d1-2329-422a-80ed-1be69bc36496"
+    "uuid": "fb48de08-8dec-4f6d-a746-ed233576f33e"
 }
