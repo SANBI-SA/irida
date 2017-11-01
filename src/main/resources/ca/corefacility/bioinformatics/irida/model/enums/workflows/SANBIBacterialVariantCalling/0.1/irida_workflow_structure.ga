@@ -1,8 +1,8 @@
 {
     "a_galaxy_workflow": "true", 
-    "annotation": "", 
+    "annotation": "snvphyl", 
     "format-version": "0.1", 
-    "name": "Latest - SANBI BVC", 
+    "name": "Copy of 'SNVPhyl v1.0.1 Paired-End (imported from API)'", 
     "steps": {
         "0": {
             "annotation": "", 
@@ -20,15 +20,21 @@
             "name": "Input dataset collection", 
             "outputs": [], 
             "position": {
-                "left": 298.4375, 
-                "top": 265.90625
+                "left": 200, 
+                "top": 200
             }, 
             "tool_id": null, 
             "tool_state": "{\"collection_type\": \"list:paired\", \"name\": \"sequence_reads_paired\"}", 
             "tool_version": null, 
             "type": "data_collection_input", 
-            "uuid": "7e7618fc-99ee-47a7-a320-116c5024d19b", 
-            "workflow_outputs": []
+            "uuid": "ea11929e-ba45-4d3c-8b8e-fee1c589c836", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "output", 
+                    "uuid": "72503012-6868-4e8e-b1d2-38845fb6bf10"
+                }
+            ]
         }, 
         "1": {
             "annotation": "", 
@@ -39,334 +45,286 @@
             "inputs": [
                 {
                     "description": "", 
-                    "name": "reference_file"
+                    "name": "reference"
                 }
             ], 
-            "label": "reference_file", 
+            "label": "reference", 
             "name": "Input dataset", 
             "outputs": [], 
             "position": {
-                "left": 298.4375, 
-                "top": 350.90625
+                "left": 200, 
+                "top": 302
             }, 
             "tool_id": null, 
-            "tool_state": "{\"name\": \"reference_file\"}", 
+            "tool_state": "{\"name\": \"reference\"}", 
             "tool_version": null, 
             "type": "data_input", 
-            "uuid": "4effa13f-4cb8-4c55-8389-e2a22faba008", 
-            "workflow_outputs": []
+            "uuid": "b22dbbdc-e021-4077-af11-df1a3793fbac", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "output", 
+                    "uuid": "a96bb183-ced0-4a51-9129-98f632caff32"
+                }
+            ]
         }, 
         "2": {
             "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/trimmomatic/trimmomatic/0.36.4", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_index/smalt_index/1.1.0", 
             "errors": null, 
             "id": 2, 
             "input_connections": {
-                "readtype|fastq_pair": {
-                    "id": 0, 
+                "reference": {
+                    "id": 1, 
                     "output_name": "output"
                 }
             }, 
             "inputs": [
                 {
-                    "description": "runtime parameter for tool Trimmomatic", 
-                    "name": "readtype"
+                    "description": "runtime parameter for tool smalt index", 
+                    "name": "reference"
                 }
             ], 
             "label": null, 
-            "name": "Trimmomatic", 
+            "name": "smalt index", 
             "outputs": [
                 {
-                    "name": "fastq_out_paired", 
-                    "type": "input"
+                    "name": "output", 
+                    "type": "binary"
                 }, 
                 {
-                    "name": "fastq_out_unpaired", 
-                    "type": "input"
-                }, 
-                {
-                    "name": "fastq_out_r1_paired", 
-                    "type": "input"
-                }, 
-                {
-                    "name": "fastq_out_r2_paired", 
-                    "type": "input"
-                }, 
-                {
-                    "name": "fastq_out_r1_unpaired", 
-                    "type": "input"
-                }, 
-                {
-                    "name": "fastq_out_r2_unpaired", 
-                    "type": "input"
-                }, 
-                {
-                    "name": "fastq_out", 
-                    "type": "input"
+                    "name": "output2", 
+                    "type": "binary"
                 }
             ], 
             "position": {
-                "left": 567.4375, 
-                "top": 265.90625
+                "left": 464, 
+                "top": 200
             }, 
             "post_job_actions": {
-                "HideDatasetActionfastq_out": {
+                "HideDatasetActionoutput": {
                     "action_arguments": {}, 
                     "action_type": "HideDatasetAction", 
-                    "output_name": "fastq_out"
+                    "output_name": "output"
                 }, 
-                "HideDatasetActionfastq_out_paired": {
+                "HideDatasetActionoutput2": {
                     "action_arguments": {}, 
                     "action_type": "HideDatasetAction", 
-                    "output_name": "fastq_out_paired"
-                }, 
-                "HideDatasetActionfastq_out_r1_paired": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "fastq_out_r1_paired"
-                }, 
-                "HideDatasetActionfastq_out_r1_unpaired": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "fastq_out_r1_unpaired"
-                }, 
-                "HideDatasetActionfastq_out_r2_paired": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "fastq_out_r2_paired"
-                }, 
-                "HideDatasetActionfastq_out_r2_unpaired": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "fastq_out_r2_unpaired"
-                }, 
-                "HideDatasetActionfastq_out_unpaired": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "fastq_out_unpaired"
+                    "output_name": "output2"
                 }
             }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/trimmomatic/trimmomatic/0.36.4", 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_index/smalt_index/1.1.0", 
             "tool_shed_repository": {
-                "changeset_revision": "069b6b601fad", 
-                "name": "trimmomatic", 
-                "owner": "sanbi-uwc", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+                "changeset_revision": "1e249f90f2a6", 
+                "name": "smalt_index", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
             }, 
-            "tool_state": "{\"operations\": \"[{\\\"__index__\\\": 0, \\\"operation\\\": {\\\"window_size\\\": \\\"4\\\", \\\"name\\\": \\\"SLIDINGWINDOW\\\", \\\"__current_case__\\\": 0, \\\"required_quality\\\": \\\"20\\\"}}]\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"readtype\": \"{\\\"single_or_paired\\\": \\\"collection\\\", \\\"fastq_pair\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"__current_case__\\\": 2}\", \"illuminaclip\": \"{\\\"do_illuminaclip\\\": \\\"false\\\", \\\"__current_case__\\\": 1}\"}", 
-            "tool_version": "0.36.4", 
+            "tool_state": "{\"__page__\": 0, \"k\": \"\\\"13\\\"\", \"__rerun_remap_job_id__\": null, \"s\": \"\\\"6\\\"\", \"reference\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.1.0", 
             "type": "tool", 
-            "uuid": "e29f48bc-e769-4619-acaa-884477a1d23a", 
+            "uuid": "713fb2c8-84dd-4762-8281-e071c61fe979", 
             "workflow_outputs": []
         }, 
         "3": {
             "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_align/novo_align/0.0.10", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/find_repeats/findrepeat/1.8.0", 
             "errors": null, 
             "id": 3, 
             "input_connections": {
-                "index|reference": {
+                "fasta": {
                     "id": 1, 
                     "output_name": "output"
-                }, 
-                "paired_end|paired_input_type_conditional|fastq_pair": {
-                    "id": 2, 
-                    "output_name": "fastq_out_paired"
                 }
             }, 
             "inputs": [
                 {
-                    "description": "runtime parameter for tool novoalign", 
-                    "name": "index"
+                    "description": "runtime parameter for tool Find Repeats", 
+                    "name": "fasta"
                 }
             ], 
             "label": null, 
-            "name": "novoalign", 
+            "name": "Find Repeats", 
             "outputs": [
                 {
-                    "name": "out_file", 
-                    "type": "bam"
+                    "name": "out", 
+                    "type": "tabular"
                 }
             ], 
             "position": {
-                "left": 859.4375, 
-                "top": 265.90625
+                "left": 464, 
+                "top": 341
             }, 
             "post_job_actions": {
-                "RenameDatasetActionout_file": {
+                "ChangeDatatypeActionout": {
                     "action_arguments": {
-                        "newname": "novoalign_file.bam"
+                        "newtype": "bed"
+                    }, 
+                    "action_type": "ChangeDatatypeAction", 
+                    "output_name": "out"
+                }, 
+                "RenameDatasetActionout": {
+                    "action_arguments": {
+                        "newname": "invalid_positions.bed"
                     }, 
                     "action_type": "RenameDatasetAction", 
-                    "output_name": "out_file"
+                    "output_name": "out"
                 }
             }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/novo_align/novo_align/0.0.10", 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/find_repeats/findrepeat/1.8.0", 
             "tool_shed_repository": {
-                "changeset_revision": "119cb8e503d0", 
-                "name": "novo_align", 
-                "owner": "sanbi-uwc", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+                "changeset_revision": "ab7b9169e516", 
+                "name": "find_repeats", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
             }, 
-            "tool_state": "{\"index\": \"{\\\"source\\\": \\\"history\\\", \\\"reference\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"paired_end\": \"{\\\"is_paired_end\\\": \\\"true\\\", \\\"paired_input_type_conditional\\\": {\\\"fastq_pair\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"paired_input_type\\\": \\\"collection\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 1}\", \"__page__\": null}", 
-            "tool_version": "0.0.10", 
+            "tool_state": "{\"__page__\": 0, \"length\": \"\\\"150\\\"\", \"__rerun_remap_job_id__\": null, \"pid\": \"\\\"90\\\"\", \"fasta\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.8.0", 
             "type": "tool", 
-            "uuid": "5661b924-3f19-47e6-89b4-3a1b4763c1a0", 
+            "uuid": "3c2257f4-d708-47c4-934e-7a027804f7db", 
             "workflow_outputs": [
                 {
                     "label": null, 
-                    "output_name": "out_file", 
-                    "uuid": "94da192e-a8b1-408a-8952-8b65d8d55ca2"
+                    "output_name": "out", 
+                    "uuid": "bb487981-c629-4c78-923a-556e35f96b2d"
                 }
             ]
         }, 
         "4": {
             "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_MarkDuplicates/1.134", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_map/smalt_map/1.1.0", 
             "errors": null, 
             "id": 4, 
             "input_connections": {
-                "inputFile": {
-                    "id": 3, 
-                    "output_name": "out_file"
-                }
-            }, 
-            "inputs": [
-                {
-                    "description": "runtime parameter for tool MarkDuplicates", 
-                    "name": "inputFile"
-                }
-            ], 
-            "label": null, 
-            "name": "MarkDuplicates", 
-            "outputs": [
-                {
-                    "name": "metrics_file", 
-                    "type": "txt"
+                "singlePaired|fastq_collection": {
+                    "id": 0, 
+                    "output_name": "output"
                 }, 
-                {
-                    "name": "outFile", 
-                    "type": "bam"
-                }
-            ], 
-            "position": {
-                "left": 1151.4375, 
-                "top": 265.90625
-            }, 
-            "post_job_actions": {
-                "RenameDatasetActionmetrics_file": {
-                    "action_arguments": {
-                        "newname": "metrics_file.txt"
-                    }, 
-                    "action_type": "RenameDatasetAction", 
-                    "output_name": "metrics_file"
+                "sma": {
+                    "id": 2, 
+                    "output_name": "output2"
                 }, 
-                "RenameDatasetActionoutFile": {
-                    "action_arguments": {
-                        "newname": "markduplicates_outfile.bam"
-                    }, 
-                    "action_type": "RenameDatasetAction", 
-                    "output_name": "outFile"
-                }
-            }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_MarkDuplicates/1.134", 
-            "tool_shed_repository": {
-                "changeset_revision": "ffa70c31d088", 
-                "name": "picard", 
-                "owner": "avowinkel", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
-            }, 
-            "tool_state": "{\"duplicate_scoring_strategy\": \"\\\"SUM_OF_BASE_QUALITIES\\\"\", \"remove_duplicates\": \"\\\"false\\\"\", \"read_name_regex\": \"\\\"[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.\\\"\", \"__page__\": null, \"__rerun_remap_job_id__\": null, \"validation_stringency\": \"\\\"LENIENT\\\"\", \"comments\": \"[]\", \"assume_sorted\": \"\\\"true\\\"\", \"optical_duplicate_pixel_distance\": \"\\\"100\\\"\", \"inputFile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
-            "tool_version": "1.134", 
-            "type": "tool", 
-            "uuid": "9c4b0b58-15da-4e5b-8d6f-ddf2e97de301", 
-            "workflow_outputs": [
-                {
-                    "label": null, 
-                    "output_name": "outFile", 
-                    "uuid": "5de0ecad-397f-4be3-beb7-6783ed89f85b"
-                }, 
-                {
-                    "label": null, 
-                    "output_name": "metrics_file", 
-                    "uuid": "53312ac0-14ef-4b46-9af7-3cc9d13d74a2"
-                }
-            ]
-        }, 
-        "5": {
-            "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_CASM/1.134", 
-            "errors": null, 
-            "id": 5, 
-            "input_connections": {
-                "inputFile": {
-                    "id": 3, 
-                    "output_name": "out_file"
-                }, 
-                "reference_source|ref_file": {
-                    "id": 1, 
+                "smi": {
+                    "id": 2, 
                     "output_name": "output"
                 }
             }, 
             "inputs": [
                 {
-                    "description": "runtime parameter for tool Collect Alignment Summary Metrics", 
-                    "name": "reference_source"
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "singlePaired"
                 }, 
                 {
-                    "description": "runtime parameter for tool Collect Alignment Summary Metrics", 
-                    "name": "inputFile"
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "insfil"
+                }, 
+                {
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "smi"
+                }, 
+                {
+                    "description": "runtime parameter for tool smalt map", 
+                    "name": "sma"
                 }
             ], 
             "label": null, 
-            "name": "Collect Alignment Summary Metrics", 
+            "name": "smalt map", 
             "outputs": [
                 {
-                    "name": "outFile", 
-                    "type": "tabular"
+                    "name": "output", 
+                    "type": "cigar"
                 }
             ], 
             "position": {
-                "left": 1151.4375, 
-                "top": 430.90625
+                "left": 692, 
+                "top": 200
             }, 
             "post_job_actions": {
-                "RenameDatasetActionoutFile": {
-                    "action_arguments": {
-                        "newname": "collect_align_summary_outfile"
-                    }, 
-                    "action_type": "RenameDatasetAction", 
-                    "output_name": "outFile"
+                "HideDatasetActionoutput": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output"
                 }
             }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/avowinkel/picard/picard_CASM/1.134", 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/smalt_map/smalt_map/1.1.0", 
             "tool_shed_repository": {
-                "changeset_revision": "ffa70c31d088", 
-                "name": "picard", 
-                "owner": "avowinkel", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+                "changeset_revision": "62faa1906fd7", 
+                "name": "smalt_map", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
             }, 
-            "tool_state": "{\"bisulphite\": \"\\\"false\\\"\", \"__page__\": null, \"maxinsert\": \"\\\"100000\\\"\", \"__rerun_remap_job_id__\": null, \"assume_sorted\": \"\\\"true\\\"\", \"metric_accumulation_level\": \"[\\\"ALL_READS\\\"]\", \"validation_stringency\": \"\\\"LENIENT\\\"\", \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"__current_case__\\\": 1}\", \"adapters\": \"[]\", \"inputFile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
-            "tool_version": "1.134", 
+            "tool_state": "{\"minbasq\": \"\\\"\\\"\", \"__page__\": 0, \"insertmin\": \"\\\"20\\\"\", \"mincover\": \"\\\"\\\"\", \"singlePaired\": \"{\\\"fastq_collection\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"sPaired\\\": \\\"collections\\\", \\\"pairtype\\\": \\\"pe\\\", \\\"__current_case__\\\": 2}\", \"scordiff\": \"\\\"\\\"\", \"minscor\": \"\\\"\\\"\", \"insfil\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"minid\": \"\\\"0.5\\\"\", \"__rerun_remap_job_id__\": null, \"search_harder\": \"\\\"false\\\"\", \"seed\": \"\\\"1\\\"\", \"sw_weighted\": \"\\\"false\\\"\", \"smi\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"oformat\": \"{\\\"bamOptions\\\": null, \\\"outformat\\\": \\\"bam\\\", \\\"__current_case__\\\": 1}\", \"insertmax\": \"\\\"1000\\\"\", \"sma\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.1.0", 
             "type": "tool", 
-            "uuid": "f0056607-b73c-4316-9d3b-8833ae140f88", 
+            "uuid": "7a4b9431-20a8-429d-a26e-433f0827c463", 
+            "workflow_outputs": []
+        }, 
+        "5": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/verify_map/verify_map/1.8.0", 
+            "errors": null, 
+            "id": 5, 
+            "input_connections": {
+                "bams": {
+                    "id": 4, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Verify Mapping Quality", 
+                    "name": "bams"
+                }
+            ], 
+            "label": null, 
+            "name": "Verify Mapping Quality", 
+            "outputs": [
+                {
+                    "name": "output_log", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 976, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionoutput_log": {
+                    "action_arguments": {
+                        "newname": "mappingQuality.txt"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output_log"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/verify_map/verify_map/1.8.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "c50b63008cc9", 
+                "name": "verify_map", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"minmap\": \"\\\"80\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"mindepth\": \"\\\"${min_coverage}\\\"\", \"bams\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.8.0", 
+            "type": "tool", 
+            "uuid": "82bed622-a144-43fd-869e-c4468e6131ff", 
             "workflow_outputs": [
                 {
                     "label": null, 
-                    "output_name": "outFile", 
-                    "uuid": "9ec1091e-0897-4dca-989b-87c92bf674dd"
+                    "output_name": "output_log", 
+                    "uuid": "06c3f8a6-091d-41d9-bd03-c6eea8504e52"
                 }
             ]
         }, 
         "6": {
             "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/devteam/freebayes/freebayes/0.4.1", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/freebayes/freebayes/0.4.1", 
             "errors": null, 
             "id": 6, 
             "input_connections": {
                 "reference_source|input_bams_0|input_bam": {
                     "id": 4, 
-                    "output_name": "outFile"
+                    "output_name": "output"
                 }, 
                 "reference_source|ref_file": {
                     "id": 1, 
@@ -396,8 +354,8 @@
                 }
             ], 
             "position": {
-                "left": 1479.4375, 
-                "top": 265.90625
+                "left": 976, 
+                "top": 313
             }, 
             "post_job_actions": {
                 "HideDatasetActionoutput_failed_alleles_bed": {
@@ -410,251 +368,52 @@
                     "action_type": "HideDatasetAction", 
                     "output_name": "output_trace"
                 }, 
-                "RenameDatasetActionoutput_vcf": {
-                    "action_arguments": {
-                        "newname": "freebayes_output_vcf"
-                    }, 
-                    "action_type": "RenameDatasetAction", 
+                "HideDatasetActionoutput_vcf": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
                     "output_name": "output_vcf"
                 }
             }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/devteam/freebayes/freebayes/0.4.1", 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/freebayes/freebayes/0.4.1", 
             "tool_shed_repository": {
-                "changeset_revision": "9f3d6c3098ac", 
+                "changeset_revision": "85b0800adde2", 
                 "name": "freebayes", 
                 "owner": "devteam", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
             }, 
-            "tool_state": "{\"__page__\": null, \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}], \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"options_type\": \"{\\\"__current_case__\\\": 1, \\\"options_type_selector\\\": \\\"simple\\\"}\", \"target_limit_type\": \"{\\\"target_limit_type_selector\\\": \\\"do_not_limit\\\", \\\"__current_case__\\\": 0}\"}", 
+            "tool_state": "{\"__page__\": 0, \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}], \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"options_type\": \"{\\\"options_type_selector\\\": \\\"full\\\", \\\"allele_scope\\\": {\\\"__current_case__\\\": 1, \\\"allele_scope_selector\\\": \\\"false\\\"}, \\\"reporting\\\": {\\\"reporting_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"genotype_likelihoods\\\": {\\\"__current_case__\\\": 1, \\\"genotype_likelihoods_selector\\\": \\\"false\\\"}, \\\"O\\\": \\\"false\\\", \\\"population_model\\\": {\\\"K\\\": \\\"false\\\", \\\"J\\\": \\\"false\\\", \\\"P\\\": \\\"1\\\", \\\"T\\\": \\\"0.001\\\", \\\"__current_case__\\\": 0, \\\"population_model_selector\\\": \\\"true\\\"}, \\\"reference_allele\\\": {\\\"reference_allele_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"optional_inputs\\\": {\\\"optional_inputs_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 0, \\\"population_mappability_priors\\\": {\\\"__current_case__\\\": 1, \\\"population_mappability_priors_selector\\\": \\\"false\\\"}, \\\"input_filters\\\": {\\\"input_filters_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}, \\\"algorithmic_features\\\": {\\\"algorithmic_features_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}}\", \"target_limit_type\": \"{\\\"target_limit_type_selector\\\": \\\"do_not_limit\\\", \\\"__current_case__\\\": 0}\"}", 
             "tool_version": "0.4.1", 
             "type": "tool", 
-            "uuid": "d70489c5-8b0f-461d-9bd9-6113bbad428f", 
-            "workflow_outputs": [
-                {
-                    "label": null, 
-                    "output_name": "output_vcf", 
-                    "uuid": "73805b8b-7712-48ee-b677-3c49c449ceee"
-                }
-            ]
+            "uuid": "880cb192-d299-4736-af89-2b0df9977514", 
+            "workflow_outputs": []
         }, 
         "7": {
             "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/qualimap2/qualimap_bamqc/2.2", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/samtools_mpileup/samtools_mpileup/2.0", 
             "errors": null, 
             "id": 7, 
             "input_connections": {
-                "input_realigned_bam_file": {
+                "reference_source|input_bams_0|input_bam": {
                     "id": 4, 
-                    "output_name": "outFile"
-                }
-            }, 
-            "inputs": [
-                {
-                    "description": "runtime parameter for tool QualiMap BamQC", 
-                    "name": "input_realigned_bam_file"
-                }
-            ], 
-            "label": null, 
-            "name": "QualiMap BamQC", 
-            "outputs": [
-                {
-                    "name": "genomecov_file", 
-                    "type": "genomecov"
-                }
-            ], 
-            "position": {
-                "left": 1479.4375, 
-                "top": 487.90625
-            }, 
-            "post_job_actions": {
-                "RenameDatasetActiongenomecov_file": {
-                    "action_arguments": {
-                        "newname": "genomecov_file"
-                    }, 
-                    "action_type": "RenameDatasetAction", 
-                    "output_name": "genomecov_file"
-                }
-            }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/qualimap2/qualimap_bamqc/2.2", 
-            "tool_shed_repository": {
-                "changeset_revision": "7923e67fa16a", 
-                "name": "qualimap2", 
-                "owner": "sanbi-uwc", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
-            }, 
-            "tool_state": "{\"mem_size\": \"\\\"8G\\\"\", \"__rerun_remap_job_id__\": null, \"input_realigned_bam_file\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__page__\": null}", 
-            "tool_version": "2.2", 
-            "type": "tool", 
-            "uuid": "11511d61-4552-4a1e-afe3-ab7f87beddcf", 
-            "workflow_outputs": [
-                {
-                    "label": null, 
-                    "output_name": "genomecov_file", 
-                    "uuid": "27ea4501-e5c2-4871-8aa3-46cf2d189389"
-                }
-            ]
-        }, 
-        "8": {
-            "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/jjohnson/snpeff/snpEff/4.1.0", 
-            "errors": null, 
-            "id": 8, 
-            "input_connections": {
-                "input": {
-                    "id": 6, 
-                    "output_name": "output_vcf"
-                }
-            }, 
-            "inputs": [
-                {
-                    "description": "runtime parameter for tool SnpEff", 
-                    "name": "input"
-                }, 
-                {
-                    "description": "runtime parameter for tool SnpEff", 
-                    "name": "intervals"
-                }, 
-                {
-                    "description": "runtime parameter for tool SnpEff", 
-                    "name": "transcripts"
-                }
-            ], 
-            "label": null, 
-            "name": "SnpEff", 
-            "outputs": [
-                {
-                    "name": "snpeff_output", 
-                    "type": "vcf"
-                }, 
-                {
-                    "name": "statsFile", 
-                    "type": "html"
-                }
-            ], 
-            "position": {
-                "left": 1807.4375, 
-                "top": 265.90625
-            }, 
-            "post_job_actions": {
-                "HideDatasetActionsnpeff_output": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "snpeff_output"
-                }, 
-                "HideDatasetActionstatsFile": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "statsFile"
-                }, 
-                "RenameDatasetActionsnpeff_output": {
-                    "action_arguments": {
-                        "newname": "snpeff_output_vcf"
-                    }, 
-                    "action_type": "RenameDatasetAction", 
-                    "output_name": "snpeff_output"
-                }
-            }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/jjohnson/snpeff/snpEff/4.1.0", 
-            "tool_shed_repository": {
-                "changeset_revision": "924af057bbca", 
-                "name": "snpeff", 
-                "owner": "jjohnson", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
-            }, 
-            "tool_state": "{\"spliceSiteSize\": \"\\\"2\\\"\", \"filter\": \"{\\\"specificEffects\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"udLength\": \"\\\"5000\\\"\", \"inputFormat\": \"\\\"vcf\\\"\", \"spliceRegion\": \"{\\\"__current_case__\\\": 0, \\\"setSpliceRegions\\\": \\\"no\\\"}\", \"outputConditional\": \"{\\\"outputFormat\\\": \\\"vcf\\\", \\\"__current_case__\\\": 0}\", \"__page__\": null, \"__rerun_remap_job_id__\": null, \"filterOut\": \"null\", \"generate_stats\": \"\\\"true\\\"\", \"noLog\": \"\\\"true\\\"\", \"chr\": \"\\\"\\\"\", \"intervals\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"snpDb\": \"{\\\"genome_version\\\": \\\"m_tuberculosis_H37Rv\\\", \\\"__current_case__\\\": 2, \\\"genomeSrc\\\": \\\"named\\\"}\", \"offset\": \"\\\"default\\\"\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"transcripts\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"annotations\": \"null\"}", 
-            "tool_version": "4.1.0", 
-            "type": "tool", 
-            "uuid": "b15cc947-1798-416f-9d61-dd6b82a933ca", 
-            "workflow_outputs": []
-        }, 
-        "9": {
-            "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/vcf_to_alignment/vcf_to_alignment/0.3", 
-            "errors": null, 
-            "id": 9, 
-            "input_connections": {
-                "reference|history": {
-                    "id": 1, 
                     "output_name": "output"
                 }, 
-                "vcf_inputs": {
-                    "id": 8, 
-                    "output_name": "snpeff_output"
+                "reference_source|ref_file": {
+                    "id": 1, 
+                    "output_name": "output"
                 }
             }, 
             "inputs": [
                 {
-                    "description": "runtime parameter for tool Generate FASTA alignment from VCF collection", 
-                    "name": "reference"
-                }, 
-                {
-                    "description": "runtime parameter for tool Generate FASTA alignment from VCF collection", 
-                    "name": "vcf_inputs"
+                    "description": "runtime parameter for tool MPileup", 
+                    "name": "reference_source"
                 }
             ], 
             "label": null, 
-            "name": "Generate FASTA alignment from VCF collection", 
+            "name": "MPileup", 
             "outputs": [
                 {
-                    "name": "output_alignment", 
-                    "type": "fasta"
-                }
-            ], 
-            "position": {
-                "left": 2133.4375, 
-                "top": 267.90625
-            }, 
-            "post_job_actions": {
-                "RenameDatasetActionoutput_alignment": {
-                    "action_arguments": {
-                        "newname": "output_alignment.fasta"
-                    }, 
-                    "action_type": "RenameDatasetAction", 
-                    "output_name": "output_alignment"
-                }
-            }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/vcf_to_alignment/vcf_to_alignment/0.3", 
-            "tool_shed_repository": {
-                "changeset_revision": "62fbd3f96b30", 
-                "name": "vcf_to_alignment", 
-                "owner": "sanbi-uwc", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
-            }, 
-            "tool_state": "{\"__page__\": null, \"__rerun_remap_job_id__\": null, \"remove_invariant_sites\": \"\\\"false\\\"\", \"reference\": \"{\\\"source\\\": \\\"history\\\", \\\"__current_case__\\\": 0, \\\"history\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}\", \"vcf_inputs\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
-            "tool_version": "0.3", 
-            "type": "tool", 
-            "uuid": "1d804351-f458-4338-8cf8-0882184f91e3", 
-            "workflow_outputs": [
-                {
-                    "label": null, 
-                    "output_name": "output_alignment", 
-                    "uuid": "0c19c9e5-0ccc-41e7-a9b9-ee11a119d8a3"
-                }
-            ]
-        }, 
-        "10": {
-            "annotation": "", 
-            "content_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/fasttree/fasttree/0.1", 
-            "errors": null, 
-            "id": 10, 
-            "input_connections": {
-                "input_alignment": {
-                    "id": 9, 
-                    "output_name": "output_alignment"
-                }
-            }, 
-            "inputs": [
-                {
-                    "description": "runtime parameter for tool FastTree", 
-                    "name": "input_alignment"
-                }
-            ], 
-            "label": null, 
-            "name": "FastTree", 
-            "outputs": [
-                {
-                    "name": "output_tree", 
-                    "type": "nhx"
+                    "name": "output_mpileup", 
+                    "type": "pileup"
                 }, 
                 {
                     "name": "output_log", 
@@ -662,8 +421,8 @@
                 }
             ], 
             "position": {
-                "left": 2461.4375, 
-                "top": 265.90625
+                "left": 976, 
+                "top": 535
             }, 
             "post_job_actions": {
                 "HideDatasetActionoutput_log": {
@@ -671,33 +430,714 @@
                     "action_type": "HideDatasetAction", 
                     "output_name": "output_log"
                 }, 
+                "HideDatasetActionoutput_mpileup": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_mpileup"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/devteam/samtools_mpileup/samtools_mpileup/2.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "81948c6e4d4d", 
+                "name": "samtools_mpileup", 
+                "owner": "devteam", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": null, \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"reference_source_selector\\\": \\\"history\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}}], \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"genotype_likelihood_computation_type\": \"{\\\"genotype_likelihood_computation_type_selector\\\": \\\"perform_genotype_likelihood_computation\\\", \\\"output_format\\\": \\\"--VCF\\\", \\\"perform_indel_calling\\\": {\\\"__current_case__\\\": 2, \\\"perform_indel_calling_selector\\\": \\\"do_not_perform_indel_calling\\\"}, \\\"compressed\\\": \\\"false\\\", \\\"__current_case__\\\": 0, \\\"output_tags\\\": null}\", \"advanced_options\": \"{\\\"max_reads_per_bam\\\": \\\"1024\\\", \\\"advanced_options_selector\\\": \\\"advanced\\\", \\\"extended_BAQ_computation\\\": \\\"false\\\", \\\"region_string\\\": \\\"\\\", \\\"limit_by_region\\\": {\\\"limit_by_regions\\\": \\\"no_limit\\\", \\\"__current_case__\\\": 2}, \\\"disable_probabilistic_realignment\\\": \\\"true\\\", \\\"skip_anomalous_read_pairs\\\": \\\"true\\\", \\\"minimum_mapping_quality\\\": \\\"0\\\", \\\"filter_by_flags\\\": {\\\"__current_case__\\\": 1, \\\"filter_flags\\\": \\\"nofilter\\\"}, \\\"__current_case__\\\": 0, \\\"coefficient_for_downgrading\\\": \\\"0\\\", \\\"minimum_base_quality\\\": \\\"0\\\", \\\"ignore_overlaps\\\": \\\"false\\\", \\\"exclude_read_group\\\": {\\\"__current_case__\\\": 2, \\\"exclude_read_groups\\\": \\\"no_limit\\\"}}\"}", 
+            "tool_version": "2.0", 
+            "type": "tool", 
+            "uuid": "55cf9f84-3f62-47fc-8828-916a3ca8779d", 
+            "workflow_outputs": []
+        }, 
+        "8": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_vcf/filtervcf/1.8.0", 
+            "errors": null, 
+            "id": 8, 
+            "input_connections": {
+                "vcf": {
+                    "id": 6, 
+                    "output_name": "output_vcf"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Filter vcf", 
+                    "name": "vcf"
+                }
+            ], 
+            "label": null, 
+            "name": "Filter vcf", 
+            "outputs": [
+                {
+                    "name": "vcfout", 
+                    "type": "vcf"
+                }
+            ], 
+            "position": {
+                "left": 1304, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionvcfout": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "vcfout"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_vcf/filtervcf/1.8.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "dc4f6d16339c", 
+                "name": "filter_vcf", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"vcf\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.8.0", 
+            "type": "tool", 
+            "uuid": "92790084-218f-4ad5-bdbb-5925d0b63cdc", 
+            "workflow_outputs": []
+        }, 
+        "9": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_call/bcftools_call/1.0.1", 
+            "errors": null, 
+            "id": 9, 
+            "input_connections": {
+                "input": {
+                    "id": 7, 
+                    "output_name": "output_mpileup"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool BCFtools call", 
+                    "name": "input"
+                }
+            ], 
+            "label": null, 
+            "name": "BCFtools call", 
+            "outputs": [
+                {
+                    "name": "output", 
+                    "type": "vcf"
+                }
+            ], 
+            "position": {
+                "left": 1304, 
+                "top": 318
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output"
+                }, 
+                "RenameDatasetActionoutput": {
+                    "action_arguments": {
+                        "newname": "mpileup_bcf"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_call/bcftools_call/1.0.1", 
+            "tool_shed_repository": {
+                "changeset_revision": "98f8a44014c1", 
+                "name": "bcftools_call", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"constraint\": \"\\\"-C alleles\\\"\", \"filter_calls\": \"{\\\"filter_calls_selector\\\": \\\"no_filter\\\", \\\"__current_case__\\\": 0}\", \"output_format\": \"\\\"b\\\"\", \"caller\": \"\\\"-c\\\"\", \"skip_indels_snvs\": \"\\\"\\\"\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"variants_only\": \"\\\"false\\\"\", \"__rerun_remap_job_id__\": null}", 
+            "tool_version": "1.0.1", 
+            "type": "tool", 
+            "uuid": "59cba723-cc03-4bc7-a38f-ef5df3c848b2", 
+            "workflow_outputs": []
+        }, 
+        "10": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_view/bcftools_view/0.1.1", 
+            "errors": null, 
+            "id": 10, 
+            "input_connections": {
+                "input": {
+                    "id": 8, 
+                    "output_name": "vcfout"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool bcftools_view", 
+                    "name": "input"
+                }
+            ], 
+            "label": null, 
+            "name": "bcftools_view", 
+            "outputs": [
+                {
+                    "name": "output", 
+                    "type": "vcf"
+                }
+            ], 
+            "position": {
+                "left": 1618, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output"
+                }, 
+                "RenameDatasetActionoutput": {
+                    "action_arguments": {
+                        "newname": "filtered_freebayes_bcf"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/bcftools_view/bcftools_view/0.1.1", 
+            "tool_shed_repository": {
+                "changeset_revision": "3628f89cb4ee", 
+                "name": "bcftools_view", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"max_nref\": \"\\\"\\\"\", \"__page__\": 0, \"samples\": \"\\\"\\\"\", \"output_format\": \"\\\"b\\\"\", \"header_option\": \"\\\"all\\\"\", \"min_nref\": \"\\\"\\\"\", \"sites_no_genotype\": \"\\\"off\\\"\", \"select_sites\": \"null\", \"__rerun_remap_job_id__\": null, \"private\": \"null\", \"filters\": \"\\\"\\\"\", \"include_types\": \"null\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"trim_alt_alleles\": \"\\\"False\\\"\", \"region\": \"\\\"\\\"\"}", 
+            "tool_version": "0.1.1", 
+            "type": "tool", 
+            "uuid": "59aede98-a211-4fcc-aad3-bfb6e99cf25e", 
+            "workflow_outputs": []
+        }, 
+        "11": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/consolidate_vcfs/consolidate_vcfs/1.8.0", 
+            "errors": null, 
+            "id": 11, 
+            "input_connections": {
+                "freebayes": {
+                    "id": 10, 
+                    "output_name": "output"
+                }, 
+                "mpileup": {
+                    "id": 9, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Consolidate VCFs", 
+                    "name": "mpileup"
+                }, 
+                {
+                    "description": "runtime parameter for tool Consolidate VCFs", 
+                    "name": "freebayes"
+                }
+            ], 
+            "label": null, 
+            "name": "Consolidate VCFs", 
+            "outputs": [
+                {
+                    "name": "bcf_combined", 
+                    "type": "bcf_bgzip"
+                }, 
+                {
+                    "name": "filtered_density", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 1932, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionbcf_combined": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "bcf_combined"
+                }, 
+                "HideDatasetActionfiltered_density": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "filtered_density"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/consolidate_vcfs/consolidate_vcfs/1.8.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "924d0f651195", 
+                "name": "consolidate_vcfs", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"snv_abundance_ratio\": \"\\\"${snv_abundance_ratio}\\\"\", \"__rerun_remap_job_id__\": null, \"use_density_filter\": \"{\\\"select_list\\\": \\\"yes\\\", \\\"threshold\\\": \\\"2\\\", \\\"window_size\\\": \\\"500\\\", \\\"__current_case__\\\": 0}\", \"mpileup\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"coverage\": \"\\\"${min_coverage}\\\"\", \"mean_mapping\": \"\\\"${min_mean_mapping}\\\"\", \"freebayes\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.8.0", 
+            "type": "tool", 
+            "uuid": "20d83b1e-ea37-48e3-b78d-56baf1021e6e", 
+            "workflow_outputs": []
+        }, 
+        "12": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/collapse_collections/collapse_dataset/1.0", 
+            "errors": null, 
+            "id": 12, 
+            "input_connections": {
+                "input_list": {
+                    "id": 11, 
+                    "output_name": "filtered_density"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Collapse Collection", 
+                    "name": "input_list"
+                }
+            ], 
+            "label": null, 
+            "name": "Collapse Collection", 
+            "outputs": [
+                {
+                    "name": "output", 
+                    "type": "input"
+                }
+            ], 
+            "position": {
+                "left": 2188, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/collapse_collections/collapse_dataset/1.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "7e5a39b5dad3", 
+                "name": "collapse_collections", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"input_list\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.0", 
+            "type": "tool", 
+            "uuid": "7ebe1271-3c71-4cc9-94c9-9867061a736b", 
+            "workflow_outputs": []
+        }, 
+        "13": {
+            "annotation": "", 
+            "content_id": "cat1", 
+            "errors": null, 
+            "id": 13, 
+            "input_connections": {
+                "input1": {
+                    "id": 12, 
+                    "output_name": "output"
+                }, 
+                "queries_0|input2": {
+                    "id": 3, 
+                    "output_name": "out"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Concatenate datasets", 
+                    "name": "input1"
+                }
+            ], 
+            "label": null, 
+            "name": "Concatenate datasets", 
+            "outputs": [
+                {
+                    "name": "out_file1", 
+                    "type": "input"
+                }
+            ], 
+            "position": {
+                "left": 2516, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionout_file1": {
+                    "action_arguments": {
+                        "newname": "combined_invalid_positions"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "out_file1"
+                }
+            }, 
+            "tool_id": "cat1", 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"input1\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"queries\": \"[{\\\"input2\\\": {\\\"__class__\\\": \\\"RuntimeValue\\\"}, \\\"__index__\\\": 0}]\"}", 
+            "tool_version": "1.0.0", 
+            "type": "tool", 
+            "uuid": "a570e64e-70ef-47aa-868a-0f6f9482bafb", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "out_file1", 
+                    "uuid": "fb505b41-0885-4b03-9934-999a863c092d"
+                }
+            ]
+        }, 
+        "14": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/vcf2snvalignment/vcf2snvalignment/1.8.0", 
+            "errors": null, 
+            "id": 14, 
+            "input_connections": {
+                "invalid": {
+                    "id": 13, 
+                    "output_name": "out_file1"
+                }, 
+                "ref_fasta": {
+                    "id": 1, 
+                    "output_name": "output"
+                }, 
+                "vcf_collection": {
+                    "id": 11, 
+                    "output_name": "bcf_combined"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool VCF 2 snvalignment", 
+                    "name": "vcf_collection"
+                }, 
+                {
+                    "description": "runtime parameter for tool VCF 2 snvalignment", 
+                    "name": "ref_fasta"
+                }, 
+                {
+                    "description": "runtime parameter for tool VCF 2 snvalignment", 
+                    "name": "invalid"
+                }
+            ], 
+            "label": null, 
+            "name": "VCF 2 snvalignment", 
+            "outputs": [
+                {
+                    "name": "positions", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "fasta", 
+                    "type": "fasta"
+                }, 
+                {
+                    "name": "phylip", 
+                    "type": "phylip"
+                }, 
+                {
+                    "name": "vcf2core", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 2774, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionfasta": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "fasta"
+                }, 
+                "HideDatasetActionphylip": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "phylip"
+                }, 
+                "RenameDatasetActionpositions": {
+                    "action_arguments": {
+                        "newname": "snvTable.tsv"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "positions"
+                }, 
+                "RenameDatasetActionvcf2core": {
+                    "action_arguments": {
+                        "newname": "vcf2core.tsv"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "vcf2core"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/vcf2snvalignment/vcf2snvalignment/1.8.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "4c99f0d32983", 
+                "name": "vcf2snvalignment", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"ref_fasta\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"strain_list\": \"{\\\"select_list\\\": \\\"all\\\", \\\"__current_case__\\\": 2}\", \"reference\": \"\\\"reference\\\"\", \"__rerun_remap_job_id__\": null, \"invalid\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"vcf_collection\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_version": "1.8.0", 
+            "type": "tool", 
+            "uuid": "3bcc5ef2-aa54-4a91-9b70-c57cf47b5bea", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "positions", 
+                    "uuid": "b8a7ac69-da4c-4435-82a4-3147195157e7"
+                }, 
+                {
+                    "label": null, 
+                    "output_name": "vcf2core", 
+                    "uuid": "bc7d52d5-4c8a-4e70-b469-932d7d7a189e"
+                }
+            ]
+        }, 
+        "15": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/jjohnson/regex_find_replace/regex1/0.1.0", 
+            "errors": null, 
+            "id": 15, 
+            "input_connections": {
+                "input": {
+                    "id": 14, 
+                    "output_name": "phylip"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Regex Find And Replace", 
+                    "name": "input"
+                }
+            ], 
+            "label": null, 
+            "name": "Regex Find And Replace", 
+            "outputs": [
+                {
+                    "name": "out_file1", 
+                    "type": "input"
+                }
+            ], 
+            "position": {
+                "left": 3023, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionout_file1": {
+                    "action_arguments": {
+                        "newname": "snvAlignment.phy"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "out_file1"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/jjohnson/regex_find_replace/regex1/0.1.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "3205c22bc968", 
+                "name": "regex_find_replace", 
+                "owner": "jjohnson", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"checks\": \"[{\\\"__index__\\\": 0, \\\"replacement\\\": \\\"\\\", \\\"pattern\\\": \\\"'\\\"}]\", \"__page__\": 0}", 
+            "tool_version": "0.1.0", 
+            "type": "tool", 
+            "uuid": "1134975e-7d95-4ca8-ae69-14732e8ced29", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "out_file1", 
+                    "uuid": "5d75c344-7a04-4614-add7-83a9de1d0618"
+                }
+            ]
+        }, 
+        "16": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_stats/filterstat/1.8.0", 
+            "errors": null, 
+            "id": 16, 
+            "input_connections": {
+                "tabfile": {
+                    "id": 14, 
+                    "output_name": "positions"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool Filter Stats", 
+                    "name": "tabfile"
+                }
+            ], 
+            "label": null, 
+            "name": "Filter Stats", 
+            "outputs": [
+                {
+                    "name": "out", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 3023, 
+                "top": 313
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionout": {
+                    "action_arguments": {
+                        "newname": "filterStats.txt"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "out"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/filter_stats/filterstat/1.8.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "416082f5d12d", 
+                "name": "filter_stats", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"tabfile\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"summary\": \"[\\\"invalids\\\"]\"}", 
+            "tool_version": "1.8.0", 
+            "type": "tool", 
+            "uuid": "157fd5be-539c-44f6-b534-d6c7aeef72de", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "out", 
+                    "uuid": "6f3e4b71-9e4b-4148-af19-ccdf08ea6d65"
+                }
+            ]
+        }, 
+        "17": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/phyml/phyml1/3.1.1", 
+            "errors": null, 
+            "id": 17, 
+            "input_connections": {
+                "input": {
+                    "id": 15, 
+                    "output_name": "out_file1"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool PhyML", 
+                    "name": "input"
+                }
+            ], 
+            "label": null, 
+            "name": "PhyML", 
+            "outputs": [
+                {
+                    "name": "output_tree", 
+                    "type": "txt"
+                }, 
+                {
+                    "name": "output_stats", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 3347, 
+                "top": 200
+            }, 
+            "post_job_actions": {
+                "ChangeDatatypeActionoutput_tree": {
+                    "action_arguments": {
+                        "newtype": "nhx"
+                    }, 
+                    "action_type": "ChangeDatatypeAction", 
+                    "output_name": "output_tree"
+                }, 
+                "RenameDatasetActionoutput_stats": {
+                    "action_arguments": {
+                        "newname": "phylogeneticTreeStats.txt"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output_stats"
+                }, 
                 "RenameDatasetActionoutput_tree": {
                     "action_arguments": {
-                        "newname": "output_tree.newick"
+                        "newname": "phylogeneticTree.newick"
                     }, 
                     "action_type": "RenameDatasetAction", 
                     "output_name": "output_tree"
                 }
             }, 
-            "tool_id": "testtoolshed.g2.bx.psu.edu/repos/sanbi-uwc/fasttree/fasttree/0.1", 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/phyml/phyml1/3.1.1", 
             "tool_shed_repository": {
-                "changeset_revision": "614a12d56e58", 
-                "name": "fasttree", 
-                "owner": "sanbi-uwc", 
-                "tool_shed": "testtoolshed.g2.bx.psu.edu"
+                "changeset_revision": "fdb1cddf0dbd", 
+                "name": "phyml", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
             }, 
-            "tool_state": "{\"__page__\": null, \"input_alignment\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"advanced_options\": \"{\\\"alignment_type1\\\": \\\"prot\\\", \\\"advanced_options_selector\\\": \\\"false\\\", \\\"__current_case__\\\": 1}\"}", 
-            "tool_version": "0.1", 
+            "tool_state": "{\"prop_invar\": \"\\\"0.0\\\"\", \"search\": \"\\\"BEST\\\"\", \"__page__\": 0, \"gamma_condition\": \"{\\\"shape\\\": \\\"e\\\", \\\"categories\\\": \\\"4\\\", \\\"__current_case__\\\": 0, \\\"gamma\\\": \\\"yes\\\"}\", \"support_condition\": \"{\\\"support\\\": \\\"sh\\\", \\\"__current_case__\\\": 0}\", \"random_condition\": \"{\\\"random\\\": \\\"no\\\", \\\"__current_case__\\\": 1}\", \"datatype_condition\": \"{\\\"tstv\\\": \\\"e\\\", \\\"model\\\": \\\"GTR\\\", \\\"type\\\": \\\"nt\\\", \\\"__current_case__\\\": 0}\", \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null}", 
+            "tool_version": "3.1.1", 
             "type": "tool", 
-            "uuid": "ae9b48a0-fb7e-4106-aa1c-c2a66189ee6c", 
+            "uuid": "c525fb6c-19a0-416b-a5c2-2a2cd0e9f19f", 
             "workflow_outputs": [
                 {
                     "label": null, 
+                    "output_name": "output_stats", 
+                    "uuid": "bb4fd323-3dad-4ed0-bdff-8b316a1bdafe"
+                }, 
+                {
+                    "label": null, 
                     "output_name": "output_tree", 
-                    "uuid": "f4785a03-88ff-43f6-84c0-f0d1570c9c2e"
+                    "uuid": "61bb537e-9cc8-4877-a664-1c6a1e0dc740"
+                }
+            ]
+        }, 
+        "18": {
+            "annotation": "", 
+            "content_id": "irida.corefacility.ca/galaxy-shed/repos/nml/snv_matrix/snvmatrix/1.8.0", 
+            "errors": null, 
+            "id": 18, 
+            "input_connections": {
+                "phylip": {
+                    "id": 15, 
+                    "output_name": "out_file1"
+                }
+            }, 
+            "inputs": [
+                {
+                    "description": "runtime parameter for tool SNV Matrix", 
+                    "name": "phylip"
+                }
+            ], 
+            "label": null, 
+            "name": "SNV Matrix", 
+            "outputs": [
+                {
+                    "name": "out", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 3347, 
+                "top": 358
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionout": {
+                    "action_arguments": {
+                        "newname": "snvMatrix.tsv"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "out"
+                }
+            }, 
+            "tool_id": "irida.corefacility.ca/galaxy-shed/repos/nml/snv_matrix/snvmatrix/1.8.0", 
+            "tool_shed_repository": {
+                "changeset_revision": "ef76fcf5a209", 
+                "name": "snv_matrix", 
+                "owner": "nml", 
+                "tool_shed": "irida.corefacility.ca/galaxy-shed"
+            }, 
+            "tool_state": "{\"__page__\": 0, \"phylip\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null}", 
+            "tool_version": "1.8.0", 
+            "type": "tool", 
+            "uuid": "19028cf9-fd41-470b-8cc7-f987db36fcfe", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "out", 
+                    "uuid": "09b50681-fdc4-4c17-95dc-4c2264e70f56"
                 }
             ]
         }
     }, 
-    "uuid": "5865eb5c-d2c8-4805-8ef0-e19622d011cb"
+    "uuid": "fb48de08-8dec-4f6d-a746-ed233576f33e"
 }
