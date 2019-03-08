@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<iridaWorkflow>
+ 	<id>4fd57ac8-83a7-49c4-b3ea-a35543a673eb</id>
+	<name>SnippyVariantCalling</name>
+	<version>0.1</version>
+	<analysisType>snippy-variant-calling</analysisType>
+	<inputs>
+		<sequenceReadsPaired>sequence_reads_paired</sequenceReadsPaired>
+            <reference>reference_file</reference>
+		<requiresSingleSample>false</requiresSingleSample>
+	</inputs>
+	<parameters>
+	</parameters>
+	<outputs>
+		<output name="snippy_log" fileName="snplog.log" />
+		<output name="snippy_snps_tabular" fileName="snptab.tabular" />
+		<output name="snippy_vcf" fileName="snpvcf.vcf" />
+		<output name="snippy_gff" fileName="snpgff.gff3" />
+		<output name="snippy_consensus_fasta" fileName="snpconsensus.fasta" />
+		<output name="snippy_mapped_reads_bam" fileName="snpsbam.bam" />
+		<output name="snippy_aligned_fasta" fileName="snpalign.fasta" />
+		<output name="snippy_snps_tabular_summary" fileName="snpalign.fasta" />
+		<output name="snippy_mapping_depth_tabular" fileName="snpsdepth.fasta" />
+		<output name="snippy_dir_core_zip" fileName="outdir.zip" />
+	</outputs>
+	<toolRepositories>
+		<repository>
+			<name>suite_sanbi_snippy_3_2</name>
+			<owner>sanbi-uwc</owner>
+			<url>https://testtoolshed.g2.bx.psu.edu</url>
+			<revision>5fca47451d0c</revision>
+		</repository>
+	</toolRepositories>
+</iridaWorkflow>
