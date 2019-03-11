@@ -1,9 +1,7 @@
 package ca.corefacility.bioinformatics.irida.service.impl.unit;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -20,6 +18,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.github.jmchilton.blend4j.galaxy.HistoriesClient;
+import com.google.common.collect.Sets;
+
 import ca.corefacility.bioinformatics.irida.exceptions.ExecutionManagerException;
 import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowAnalysisTypeException;
 import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowException;
@@ -27,21 +28,21 @@ import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotFoundExce
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisCleanedState;
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisState;
 import ca.corefacility.bioinformatics.irida.model.project.ReferenceFile;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
-import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisPhylogenomicsPipeline;
+import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.Analysis;
 import ca.corefacility.bioinformatics.irida.model.workflow.execution.galaxy.GalaxyWorkflowState;
 import ca.corefacility.bioinformatics.irida.model.workflow.execution.galaxy.GalaxyWorkflowStatus;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
+import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyJobErrorsService;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.integration.Util;
 import ca.corefacility.bioinformatics.irida.repositories.analysis.submission.AnalysisSubmissionRepository;
+import ca.corefacility.bioinformatics.irida.repositories.analysis.submission.JobErrorRepository;
 import ca.corefacility.bioinformatics.irida.service.AnalysisExecutionScheduledTask;
 import ca.corefacility.bioinformatics.irida.service.AnalysisSubmissionService;
 import ca.corefacility.bioinformatics.irida.service.CleanupAnalysisSubmissionCondition;
 import ca.corefacility.bioinformatics.irida.service.analysis.execution.AnalysisExecutionService;
 import ca.corefacility.bioinformatics.irida.service.impl.AnalysisExecutionScheduledTaskImpl;
 import ca.corefacility.bioinformatics.irida.service.impl.analysis.submission.CleanupAnalysisSubmissionConditionAge;
-
-import com.google.common.collect.Sets;
 
 /**
  * Tests out scheduling analysis tasks.
@@ -58,19 +59,29 @@ public class AnalysisExecutionScheduledTaskImplTest {
 	private AnalysisExecutionService analysisExecutionService;
 
 	@Mock
-	private Set<SingleEndSequenceFile> sequenceFiles;
+	private Set<SequencingObject> sequenceFiles;
 
 	@Mock
 	private ReferenceFile referenceFile;
 
 	@Mock
-	private AnalysisPhylogenomicsPipeline analysis;
+	private Analysis analysis;
 	
 	@Mock
 	private AnalysisSubmission analysisSubmissionMock;
 	
 	@Mock
 	private AnalysisSubmission analysisSubmissionMock2;
+
+
+	@Mock
+	private GalaxyJobErrorsService galaxyJobErrorsService;
+
+	@Mock
+	private HistoriesClient historiesClient;
+
+	@Mock
+	private JobErrorRepository jobErrorRepository;
 
 	private static final String ANALYSIS_ID = "1";
 	private static final Long INTERNAL_ID = 1L;
@@ -88,15 +99,17 @@ public class AnalysisExecutionScheduledTaskImplTest {
 		MockitoAnnotations.initMocks(this);
 
 		analysisExecutionScheduledTask = new AnalysisExecutionScheduledTaskImpl(analysisSubmissionRepository,
-				analysisExecutionService, CleanupAnalysisSubmissionCondition.ALWAYS_CLEANUP);
+				analysisExecutionService, CleanupAnalysisSubmissionCondition.ALWAYS_CLEANUP,
+				galaxyJobErrorsService, jobErrorRepository);
 
 		analysisSubmission = AnalysisSubmission.builder(workflowId)
 				.name("my analysis")
-				.inputFilesSingleEnd(sequenceFiles)
+				.inputFiles(sequenceFiles)
 				.referenceFile(referenceFile)
 				.build();
 		analysisSubmission.setId(INTERNAL_ID);
 		analysisSubmission.setRemoteAnalysisId(ANALYSIS_ID);
+		when(galaxyJobErrorsService.createNewJobErrors(analysisSubmission)).thenReturn(new ArrayList<>());
 	}
 
 	/**
@@ -118,6 +131,38 @@ public class AnalysisExecutionScheduledTaskImplTest {
 		analysisExecutionScheduledTask.prepareAnalyses();
 
 		verify(analysisExecutionService).prepareSubmission(analysisSubmission);
+	}
+
+	@Test
+	public void testPrepareAnalysisPriorities()
+			throws ExecutionManagerException, IOException, IridaWorkflowNotFoundException {
+		AnalysisSubmission low = AnalysisSubmission.builder(workflowId)
+				.name("low")
+				.inputFiles(sequenceFiles)
+				.priority(AnalysisSubmission.Priority.LOW)
+				.build();
+
+		AnalysisSubmission medium = AnalysisSubmission.builder(workflowId)
+				.name("medium")
+				.inputFiles(sequenceFiles)
+				.priority(AnalysisSubmission.Priority.MEDIUM)
+				.build();
+
+		AnalysisSubmission high = AnalysisSubmission.builder(workflowId)
+				.name("high")
+				.inputFiles(sequenceFiles)
+				.priority(AnalysisSubmission.Priority.HIGH)
+				.build();
+
+		when(analysisSubmissionRepository.findByAnalysisState(AnalysisState.NEW))
+				.thenReturn(Arrays.asList(medium, high, low));
+		when(analysisExecutionService.getCapacity()).thenReturn(2);
+
+		analysisExecutionScheduledTask.prepareAnalyses();
+
+		verify(analysisExecutionService).prepareSubmission(high);
+		verify(analysisExecutionService).prepareSubmission(medium);
+		verify(analysisExecutionService, times(0)).prepareSubmission(low);
 	}
 
 	/**
@@ -502,7 +547,8 @@ public class AnalysisExecutionScheduledTaskImplTest {
 	@Test
 	public void testCleanupAnalysisSubmissionsCompletedOverOneDaySuccess() throws ExecutionManagerException {
 		analysisExecutionScheduledTask = new AnalysisExecutionScheduledTaskImpl(analysisSubmissionRepository,
-				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ofDays(1)));
+				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ofDays(1)),
+				galaxyJobErrorsService, jobErrorRepository);
 
 		when(analysisSubmissionMock.getAnalysisState()).thenReturn(AnalysisState.COMPLETED);
 		when(analysisSubmissionMock.getAnalysisCleanedState()).thenReturn(AnalysisCleanedState.NOT_CLEANED);
@@ -528,7 +574,8 @@ public class AnalysisExecutionScheduledTaskImplTest {
 	@Test
 	public void testCleanupAnalysisSubmissionsCompletedCleanupZeroSuccess() throws ExecutionManagerException {
 		analysisExecutionScheduledTask = new AnalysisExecutionScheduledTaskImpl(analysisSubmissionRepository,
-				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ZERO));
+				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ZERO),
+				galaxyJobErrorsService, jobErrorRepository);
 
 		when(analysisSubmissionMock.getAnalysisState()).thenReturn(AnalysisState.COMPLETED);
 		when(analysisSubmissionMock.getAnalysisCleanedState()).thenReturn(AnalysisCleanedState.NOT_CLEANED);
@@ -555,7 +602,8 @@ public class AnalysisExecutionScheduledTaskImplTest {
 	@Test
 	public void testCleanupAnalysisSubmissionsCompletedUnderOneDaySuccess() throws ExecutionManagerException {
 		analysisExecutionScheduledTask = new AnalysisExecutionScheduledTaskImpl(analysisSubmissionRepository,
-				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ofDays(1)));
+				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ofDays(1)),
+				galaxyJobErrorsService, jobErrorRepository);
 
 		when(analysisSubmissionMock.getAnalysisState()).thenReturn(AnalysisState.COMPLETED);
 		when(analysisSubmissionMock.getAnalysisCleanedState()).thenReturn(AnalysisCleanedState.NOT_CLEANED);
@@ -582,7 +630,8 @@ public class AnalysisExecutionScheduledTaskImplTest {
 	@Test
 	public void testCleanupAnalysisSubmissionsCompletedOverUnderOneDaySuccess() throws ExecutionManagerException {
 		analysisExecutionScheduledTask = new AnalysisExecutionScheduledTaskImpl(analysisSubmissionRepository,
-				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ofDays(1)));
+				analysisExecutionService, new CleanupAnalysisSubmissionConditionAge(Duration.ofDays(1)),
+				galaxyJobErrorsService, jobErrorRepository);
 
 		when(analysisSubmissionMock.getAnalysisState()).thenReturn(AnalysisState.COMPLETED);
 		when(analysisSubmissionMock.getAnalysisCleanedState()).thenReturn(AnalysisCleanedState.NOT_CLEANED);

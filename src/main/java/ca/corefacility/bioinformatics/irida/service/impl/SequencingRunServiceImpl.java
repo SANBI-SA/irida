@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,9 +26,7 @@ import ca.corefacility.bioinformatics.irida.exceptions.InvalidPropertyException;
 import ca.corefacility.bioinformatics.irida.model.run.SequencingRun;
 import ca.corefacility.bioinformatics.irida.model.sample.Sample;
 import ca.corefacility.bioinformatics.irida.model.sample.SampleSequencingObjectJoin;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
 import ca.corefacility.bioinformatics.irida.repositories.SequencingRunRepository;
@@ -136,15 +135,9 @@ public class SequencingRunServiceImpl extends CRUDServiceImpl<Long, SequencingRu
 				referencedSamples.add(sampleForSequencingObject.getSubject());
 			}
 
-			Set<AnalysisSubmission> submissions = new HashSet<>();
-			// Get the analysis submissions this file is included in
-			if (sequencingObject instanceof SequenceFilePair) {
-				submissions = submissionRepository
-						.findAnalysisSubmissionForSequenceFilePair((SequenceFilePair) sequencingObject);
-			} else if (sequencingObject instanceof SingleEndSequenceFile) {
-				submissions = submissionRepository
-						.findAnalysisSubmissionForSequenceFile((SingleEndSequenceFile) sequencingObject);
-			}
+			//Get the analysis submissions this file is included in
+			Set<AnalysisSubmission> submissions = submissionRepository
+					.findAnalysisSubmissionsForSequecingObject(sequencingObject);
 
 			// If there are no submissions, we can delete the pair and file
 			if (submissions.isEmpty()) {
@@ -204,5 +197,14 @@ public class SequencingRunServiceImpl extends CRUDServiceImpl<Long, SequencingRu
 	public Page<SequencingRun> list(int page, int size, Direction order, String... sortProperties)
 			throws IllegalArgumentException {
 		return super.list(page, size, order, sortProperties);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_SEQUENCER', 'ROLE_TECHNICIAN')")
+	@Override
+	public Page<SequencingRun> list(int page, int size, Sort sort) throws IllegalArgumentException {
+		return super.list(page, size, sort);
 	}
 }

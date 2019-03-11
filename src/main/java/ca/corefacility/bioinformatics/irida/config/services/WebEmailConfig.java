@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.thymeleaf.spring4.SpringTemplateEngine;
-import org.thymeleaf.templatemode.StandardTemplateModeHandlers;
+import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 /**
@@ -26,7 +26,7 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
  * 
  */
 @Configuration
-@PropertySource(value = { "classpath:configuration.properties", "file:/etc/irida/web.conf" }, ignoreResourceNotFound = true)
+@Import({ IridaApiPropertyPlaceholderConfig.class })
 public class WebEmailConfig {
 
 	private static final String MAIL_TEMPLATE_PREFIX = "/mail/";
@@ -56,11 +56,15 @@ public class WebEmailConfig {
 		return sender;
 	}
 
+	/**
+	 * Configure the template resolver
+	 * @return A ClassLoaderTemplateResolver
+	 */
 	public ClassLoaderTemplateResolver classLoaderTemplateResolver() {
 		ClassLoaderTemplateResolver classLoaderTemplateResolver = new ClassLoaderTemplateResolver();
 		classLoaderTemplateResolver.setPrefix(MAIL_TEMPLATE_PREFIX);
 		classLoaderTemplateResolver.setSuffix(TEMPLATE_SUFFIX);
-		classLoaderTemplateResolver.setTemplateMode(StandardTemplateModeHandlers.XHTML.getTemplateModeName());
+		classLoaderTemplateResolver.setTemplateMode(TemplateMode.HTML);
 		classLoaderTemplateResolver.setCharacterEncoding(CHARACER_ENCODING);
 		return classLoaderTemplateResolver;
 	}

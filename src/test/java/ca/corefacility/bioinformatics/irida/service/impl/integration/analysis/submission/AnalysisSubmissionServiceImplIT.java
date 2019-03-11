@@ -5,14 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExcecutionListener;
@@ -36,6 +29,7 @@ import com.github.springtestdbunit.DbUnitTestExecutionListener;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import ca.corefacility.bioinformatics.irida.config.IridaApiGalaxyTestConfig;
@@ -51,7 +45,6 @@ import ca.corefacility.bioinformatics.irida.model.workflow.submission.IridaWorkf
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.ProjectAnalysisSubmissionJoin;
 import ca.corefacility.bioinformatics.irida.repositories.analysis.submission.WorkflowNamedParametersRepository;
 import ca.corefacility.bioinformatics.irida.repositories.sequencefile.SequencingObjectRepository;
-import ca.corefacility.bioinformatics.irida.repositories.specification.AnalysisSubmissionSpecification;
 import ca.corefacility.bioinformatics.irida.repositories.user.UserRepository;
 import ca.corefacility.bioinformatics.irida.service.AnalysisSubmissionService;
 import ca.corefacility.bioinformatics.irida.service.ProjectService;
@@ -83,7 +76,7 @@ public class AnalysisSubmissionServiceImplIT {
 
 	@Autowired
 	private WorkflowNamedParametersRepository parametersRepository;
-	
+
 	@Autowired
 	private ProjectService projectService;
 
@@ -112,22 +105,20 @@ public class AnalysisSubmissionServiceImplIT {
 	@WithMockUser(username = "aaron", roles = "ADMIN")
 	public void searchAnalyses() {
 
-		Specification<AnalysisSubmission> specification = AnalysisSubmissionSpecification.filterAnalyses(null, null,
-				null, null, null, null);
-		Page<AnalysisSubmission> paged = analysisSubmissionService.search(specification, 0, 10, Sort.Direction.ASC,
-				"createdDate");
+		Page<AnalysisSubmission> paged = analysisSubmissionService.listAllSubmissions(null, null, null, null,
+				new PageRequest(0, 10, new Sort(Direction.ASC, "createdDate")));
 		assertEquals(10, paged.getContent().size());
 
 		// Try filtering a by names
 		String name = "My";
-		specification = AnalysisSubmissionSpecification.filterAnalyses(null, name, null, null, null, null);
-		paged = analysisSubmissionService.search(specification, 0, 10, Sort.Direction.ASC, "createdDate");
-		assertEquals(8, paged.getContent().size());
+		paged = analysisSubmissionService.listAllSubmissions(null, name, null, null,
+				new PageRequest(0, 10, new Sort(Direction.ASC, "createdDate")));
+		assertEquals(10, paged.getContent().size());
 
 		// Add a state filter
 		AnalysisState state = AnalysisState.COMPLETED;
-		specification = AnalysisSubmissionSpecification.filterAnalyses(null, name, state, null, null, null);
-		paged = analysisSubmissionService.search(specification, 0, 10, Sort.Direction.ASC, "createdDate");
+		paged = analysisSubmissionService.listAllSubmissions(null, name, state, null,
+				new PageRequest(0, 10, new Sort(Direction.ASC, "createdDate")));
 		assertEquals(2, paged.getContent().size());
 	}
 
@@ -187,7 +178,25 @@ public class AnalysisSubmissionServiceImplIT {
 	@Test
 	@WithMockUser(username = "aaron", roles = "ADMIN")
 	public void testFindAllAdminUser() {
-		assertNotNull("Should find submissions", analysisSubmissionService.findAll());
+		Iterable<AnalysisSubmission> submissions = analysisSubmissionService.findAll();
+
+		Set<Long> submissionIds = Sets.newHashSet();
+		submissions.forEach(submission -> submissionIds.add(submission.getId()));
+		assertEquals("Invalid analysis submissions found",
+				ImmutableSet.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L), submissionIds);
+	}
+
+	/**
+	 * Tests finding all accessible to regular user.
+	 */
+	@Test
+	@WithMockUser(username = "otheraaron", roles = "USER")
+	public void testFindAllRegularUser() {
+		Iterable<AnalysisSubmission> submissions = analysisSubmissionService.findAll();
+
+		Set<Long> submissionIds = Sets.newHashSet();
+		submissions.forEach(submission -> submissionIds.add(submission.getId()));
+		assertEquals("Invalid analysis submissions found", ImmutableSet.of(3L, 9L, 11L, 12L), submissionIds);
 	}
 
 	/**
@@ -380,6 +389,31 @@ public class AnalysisSubmissionServiceImplIT {
 	}
 
 	/**
+	 * Tests updating the analysis with a new priority.  Should fail.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	@WithMockUser(username = "aaron", roles = "ADMIN")
+	public void testUpdatePriorityFail() {
+		AnalysisSubmission submission = analysisSubmissionService.read(1L);
+		submission.setPriority(AnalysisSubmission.Priority.HIGH);
+		analysisSubmissionService.update(submission);
+	}
+
+	/**
+	 * Tests updating the analysis with a new priority.
+	 */
+	@Test
+	@WithMockUser(username = "aaron", roles = "ADMIN")
+	public void testUpdatePriority() {
+		AnalysisSubmission submission = analysisSubmissionService.read(1L);
+
+		analysisSubmissionService.updatePriority(submission, AnalysisSubmission.Priority.HIGH);
+		submission = analysisSubmissionService.read(1L);
+
+		assertEquals("Should have high priority", submission.getPriority(), AnalysisSubmission.Priority.HIGH);
+	}
+
+	/**
 	 * Tests creating a submission as a regular user.
 	 */
 	@Test
@@ -388,7 +422,7 @@ public class AnalysisSubmissionServiceImplIT {
 		SingleEndSequenceFile sequencingObject = (SingleEndSequenceFile) sequencingObjectRepository.findOne(1L);
 
 		AnalysisSubmission submission = AnalysisSubmission.builder(workflowId).name("test")
-				.inputFilesSingleEnd(Sets.newHashSet(sequencingObject)).build();
+				.inputFiles(Sets.newHashSet(sequencingObject)).build();
 		AnalysisSubmission createdSubmission = analysisSubmissionService.create(submission);
 		assertNotNull("Submission should have been created", createdSubmission);
 		assertEquals("submitter should be set properly", Long.valueOf(1L), createdSubmission.getSubmitter().getId());
@@ -403,20 +437,10 @@ public class AnalysisSubmissionServiceImplIT {
 		SingleEndSequenceFile sequencingObject = (SingleEndSequenceFile) sequencingObjectRepository.findOne(1L);
 
 		AnalysisSubmission submission = AnalysisSubmission.builder(workflowId).name("test")
-				.inputFilesSingleEnd(Sets.newHashSet(sequencingObject)).build();
+				.inputFiles(Sets.newHashSet(sequencingObject)).build();
 		AnalysisSubmission createdSubmission = analysisSubmissionService.create(submission);
 		assertNotNull("Submission should have been created", createdSubmission);
 		assertEquals("submitter should be set properly", Long.valueOf(2L), createdSubmission.getSubmitter().getId());
-	}
-
-	/**
-	 * Tests searching as an admin user.
-	 */
-	@Test
-	@WithMockUser(username = "aaron", roles = "ADMIN")
-	public void testSearchAdminUser() {
-		assertNotNull("search should succeed", analysisSubmissionService
-				.search(new AnalysisSubmissionTestSpecification(), 1, 1, Direction.ASC, "createdDate"));
 	}
 
 	/**
@@ -474,7 +498,7 @@ public class AnalysisSubmissionServiceImplIT {
 	public void testGetAnalysisSubmissionsForCurrentUserAsRegularUser2() {
 		Set<AnalysisSubmission> submissions = analysisSubmissionService.getAnalysisSubmissionsForCurrentUser();
 		assertNotNull("should get submissions for the user", submissions);
-		assertEquals("submissions should have correct number", 1, submissions.size());
+		assertEquals("submissions should have correct number", 3, submissions.size());
 	}
 
 	/**
@@ -486,7 +510,7 @@ public class AnalysisSubmissionServiceImplIT {
 	public void testGetAnalysisSubmissionsForCurrentUserAsAdminUser() {
 		Set<AnalysisSubmission> submissions = analysisSubmissionService.getAnalysisSubmissionsForCurrentUser();
 		assertNotNull("should get submissions for the user", submissions);
-		assertEquals("submissions should have correct number", 1, submissions.size());
+		assertEquals("submissions should have correct number", 3, submissions.size());
 	}
 
 	/**
@@ -506,7 +530,7 @@ public class AnalysisSubmissionServiceImplIT {
 		final IridaWorkflowNamedParameters params = new IridaWorkflowNamedParameters("named parameters.", workflowId,
 				ImmutableMap.of("named", "parameter"));
 		final AnalysisSubmission submission = AnalysisSubmission.builder(workflowId)
-				.inputFilesSingleEnd(Sets.newHashSet(sequencingObject)).withNamedParameters(params).build();
+				.inputFiles(Sets.newHashSet(sequencingObject)).withNamedParameters(params).build();
 		analysisSubmissionService.create(submission);
 	}
 
@@ -516,7 +540,7 @@ public class AnalysisSubmissionServiceImplIT {
 		final SingleEndSequenceFile sequencingObject = (SingleEndSequenceFile) sequencingObjectRepository.findOne(1L);
 		final IridaWorkflowNamedParameters params = parametersRepository.findOne(1L);
 		final AnalysisSubmission submission = AnalysisSubmission.builder(workflowId)
-				.inputFilesSingleEnd(Sets.newHashSet(sequencingObject)).withNamedParameters(params).build();
+				.inputFiles(Sets.newHashSet(sequencingObject)).withNamedParameters(params).build();
 		analysisSubmissionService.create(submission);
 
 		assertNotNull("Should have saved and created an id for the submission", submission.getId());
@@ -591,7 +615,7 @@ public class AnalysisSubmissionServiceImplIT {
 	public void testGetPercentageCompleteFailError() throws EntityNotFoundException, ExecutionManagerException {
 		analysisSubmissionService.getPercentCompleteForAnalysisSubmission(7L);
 	}
-	
+
 	/**
 	 * Tests whether a user can read an analysis when they are not the submitter
 	 * but they are on a project where the analysis is shared
@@ -621,6 +645,25 @@ public class AnalysisSubmissionServiceImplIT {
 		Project project2 = projectService.read(2L);
 		analysisSubmissionService.shareAnalysisSubmissionWithProject(read, project2);
 	}
+	
+	@Test
+	@WithMockUser(username = "aaron", roles = "USER")
+	public void testGetAnalysisSubmissionsSharedToProject() {
+		Project project = projectService.read(1L);
+		Collection<AnalysisSubmission> submissions = analysisSubmissionService.getAnalysisSubmissionsSharedToProject(project);
+		
+		Set<Long> submissionIds = submissions.stream().map(AnalysisSubmission::getId).collect(Collectors.toSet());
+		assertEquals("Incorrect analysis submissions for project", Sets.newHashSet(3L, 12L), submissionIds);
+	}
+	
+	@Test
+	@WithMockUser(username = "aaron", roles = "USER")
+	public void testGetAnalysisSubmissionsSharedToProjectNoSubmissions() {
+		Project project = projectService.read(2L);
+		Collection<AnalysisSubmission> submissions = analysisSubmissionService.getAnalysisSubmissionsSharedToProject(project);
+		
+		assertEquals("Unexpected analysis submission in project", 0, submissions.size());
+	}
 
 	@Test
 	@WithMockUser(username = "aaron", roles = "USER")
@@ -639,16 +682,64 @@ public class AnalysisSubmissionServiceImplIT {
 
 		analysisSubmissionService.removeAnalysisProjectShare(read, project2);
 	}
+
+	@Test
+	@WithMockUser(username = "aaron", roles = "USER")
+	public void testGetAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIdsUser1Pass1() {
+		List<AnalysisSubmission> submissions = analysisSubmissionService
+				.getAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIds(
+						Sets.newHashSet(UUID.fromString("e47c1a8b-4ccd-4e56-971b-24c384933f44")));
+
+		Set<Long> submissionIds = submissions.stream().map(AnalysisSubmission::getId).collect(Collectors.toSet());
+		assertEquals("Got incorrect analysis submissions", ImmutableSet.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 10L, 12L),
+				submissionIds);
+	}
+
+	@Test
+	@WithMockUser(username = "otheraaron", roles = "USER")
+	public void testGetAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIdsUser2Pass1() {
+		List<AnalysisSubmission> submissions = analysisSubmissionService
+				.getAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIds(
+						Sets.newHashSet(UUID.fromString("e47c1a8b-4ccd-4e56-971b-24c384933f44")));
+
+		Set<Long> submissionIds = submissions.stream().map(AnalysisSubmission::getId).collect(Collectors.toSet());
+		assertEquals("Got incorrect analysis submissions", ImmutableSet.of(3L, 9L, 12L), submissionIds);
+	}
+
+	@Test
+	@WithMockUser(username = "aaron", roles = "USER")
+	public void testGetAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIdsUser1Pass2() {
+		List<AnalysisSubmission> submissions = analysisSubmissionService
+				.getAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIds(
+						Sets.newHashSet(UUID.fromString("e47c1a8b-4ccd-4e56-971b-24c384933f44"),
+								UUID.fromString("d18dfcfe-f10c-48c0-b297-4f90cb9c44bc")));
+
+		Set<Long> submissionIds = submissions.stream().map(AnalysisSubmission::getId).collect(Collectors.toSet());
+		assertEquals("Got incorrect analysis submissions", ImmutableSet.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 10L, 12L),
+				submissionIds);
+	}
+
+	@Test
+	@WithMockUser(username = "otheraaron", roles = "USER")
+	public void testGetAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIdsUser2Pass2() {
+		List<AnalysisSubmission> submissions = analysisSubmissionService
+				.getAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIds(
+						Sets.newHashSet(UUID.fromString("e47c1a8b-4ccd-4e56-971b-24c384933f44"),
+								UUID.fromString("d18dfcfe-f10c-48c0-b297-4f90cb9c44bc")));
+
+		Set<Long> submissionIds = submissions.stream().map(AnalysisSubmission::getId).collect(Collectors.toSet());
+		assertEquals("Got incorrect analysis submissions", ImmutableSet.of(3L, 9L, 11L, 12L), submissionIds);
+	}
 	
-	/**
-	 * Test specification.
-	 * 
-	 *
-	 */
-	private class AnalysisSubmissionTestSpecification implements Specification<AnalysisSubmission> {
-		@Override
-		public Predicate toPredicate(Root<AnalysisSubmission> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-			return null;
-		}
+	@Test
+	@WithMockUser(username = "aaron", roles = "USER")
+	public void testGetAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIdsUser1NoSubmissions() {
+		List<AnalysisSubmission> submissions = analysisSubmissionService
+				.getAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIds(
+						Sets.newHashSet(UUID.fromString("d18dfcfe-f10c-48c0-b297-4f90cb9c44bc")));
+
+		Set<Long> submissionIds = submissions.stream().map(AnalysisSubmission::getId).collect(Collectors.toSet());
+		assertEquals("Got incorrect analysis submissions", ImmutableSet.of(),
+				submissionIds);
 	}
 }

@@ -1,28 +1,19 @@
-const angular = require('angular');
-const $ = require('jquery');
-const union = require('lodash/union');
+import angular from "angular";
+import "./modules/cart/irida.cart";
+import { IridaSession } from "./services/IridaSession";
+import "./pages/search/irida.search";
+// Import css
+import "../sass/app.scss";
+// Font Awesome
+import "@fortawesome/fontawesome-free/js/all";
+/*
+This will load notifications into the global namespace.  Remove this once all
+files have been converted over to wekbpack builds.
+ */
+import "./modules/notifications";
 
-let deps = union(window.dependencies || [], [
-  'ngAria',
-  'ngAnimate',
-  'ui.bootstrap',
-  'irida.session',
-  'irida.notifications',
-  'irida.cart'
-]);
+const deps = ["ngAria", "ui.bootstrap", "irida.cart", IridaSession];
 
-const app = angular.module('irida', deps)
-  .config($httpProvider => {
-    $httpProvider.defaults.headers
-      .post['Content-Type'] = 'application/x-www-form-urlencoded';
-
-    // Make sure that all ajax form data is sent in the correct format.
-    $httpProvider.defaults.transformRequest = data => {
-      if (typeof data === 'undefined') {
-        return data;
-      }
-      return $.param(data);
-    };
-  });
+const app = angular.module("irida", deps);
 
 export default app;

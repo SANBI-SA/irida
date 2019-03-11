@@ -1,9 +1,9 @@
 package ca.corefacility.bioinformatics.irida.service;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import ca.corefacility.bioinformatics.irida.exceptions.EntityNotFoundException;
 import ca.corefacility.bioinformatics.irida.exceptions.ExecutionManagerException;
@@ -16,6 +16,8 @@ import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.JobError;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.ProjectSampleAnalysisOutputInfo;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.IridaWorkflowNamedParameters;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.ProjectAnalysisSubmissionJoin;
@@ -37,7 +39,7 @@ public interface AnalysisSubmissionService extends CRUDService<Long, AnalysisSub
 	 *             If the corresponding analysis cannot be found.
 	 */
 	public AnalysisState getStateForAnalysisSubmission(Long analysisSubmissionId) throws EntityNotFoundException;
-	
+
 	/**
 	 * Gets a {@link Set} of {@link AnalysisSubmission}s for a {@link User}.
 	 * 
@@ -55,6 +57,18 @@ public interface AnalysisSubmissionService extends CRUDService<Long, AnalysisSub
 	 *         user.
 	 */
 	public Set<AnalysisSubmission> getAnalysisSubmissionsForCurrentUser();
+	
+	/**
+	 * Gets all {@link AnalysisSubmissionService}s accessible by the current
+	 * user matching one of the workflow ids.
+	 * 
+	 * @param workflowIds
+	 *            The workflow ids to match.
+	 * @return A list of {@link AnalysisSubmission}s matching one of the
+	 *         workflow ids.
+	 */
+	public List<AnalysisSubmission> getAnalysisSubmissionsAccessibleByCurrentUserByWorkflowIds(
+			Collection<UUID> workflowIds);
 	
 	/**
 	 * Submit {@link AnalysisSubmission} for workflows allowing multiple one
@@ -79,12 +93,15 @@ public interface AnalysisSubmissionService extends CRUDService<Long, AnalysisSub
 	 *            {@link String} the description of the analysis being submitted
 	 * @param projectsToShare
 	 *            A list of {@link Project}s to share analysis results with
+	 * @param writeResultsToSamples
+	 *            If true, results of this pipeline will be saved back to the
+	 *            samples on successful completion.
 	 * @return the {@link AnalysisSubmission} created for the files.
 	 */
 	public AnalysisSubmission createMultipleSampleSubmission(IridaWorkflow workflow, Long ref,
 			List<SingleEndSequenceFile> sequenceFiles, List<SequenceFilePair> sequenceFilePairs,
 			Map<String, String> unnamedParameters, IridaWorkflowNamedParameters namedParameters, String name,
-			String analysisDescription, List<Project> projectsToShare);
+			String analysisDescription, List<Project> projectsToShare, boolean writeResultsToSamples);
 
 	/**
 	 * Submit {@link AnalysisSubmission} for workflows requiring only one
@@ -109,13 +126,16 @@ public interface AnalysisSubmissionService extends CRUDService<Long, AnalysisSub
 	 *            {@link String} the description of the analysis being submitted
 	 * @param projectsToShare
 	 *            A list of {@link Project}s to share analysis results with
+	 * @param writeResultsToSamples
+	 *            If true, results of this pipeline will be saved back to the
+	 *            samples on successful completion.
 	 * @return the {@link Collection} of {@link AnalysisSubmission} created for
 	 *         the supplied files.
 	 */
 	public Collection<AnalysisSubmission> createSingleSampleSubmission(IridaWorkflow workflow, Long ref,
 			List<SingleEndSequenceFile> sequenceFiles, List<SequenceFilePair> sequenceFilePairs,
 			Map<String, String> unnamedParameters, IridaWorkflowNamedParameters namedParameters, String name,
-			String analysisDescription, List<Project> projectsToShare);
+			String analysisDescription, List<Project> projectsToShare, boolean writeResultsToSamples);
 
 	/**
 	 * Given the id of an {@link AnalysisSubmission} gets the percentage
@@ -134,7 +154,25 @@ public interface AnalysisSubmissionService extends CRUDService<Long, AnalysisSub
 	 */
 	public float getPercentCompleteForAnalysisSubmission(Long id) throws EntityNotFoundException,
 			NoPercentageCompleteException, ExecutionManagerException;
-	
+
+	/**
+	 * Get the {@link JobError} objects for a {@link AnalysisSubmission} id
+	 * @param id {@link AnalysisSubmission} id
+	 * @return {@link JobError} objects for a {@link AnalysisSubmission}
+	 * @throws EntityNotFoundException If no such {@link AnalysisSubmission} exists.
+	 * @throws ExecutionManagerException If there was an issue contacting the execution manager.
+	 */
+	List<JobError> getJobErrors(Long id) throws EntityNotFoundException, ExecutionManagerException;
+
+	/**
+	 * Get first {@link JobError} for a {@link AnalysisSubmission} id
+	 * @param id {@link AnalysisSubmission} id
+	 * @return {@link JobError} object
+	 * @throws EntityNotFoundException If no such {@link AnalysisSubmission} exists.
+	 * @throws ExecutionManagerException If there was an issue contacting the execution manager.
+	 */
+	JobError getFirstJobError(Long id) throws  EntityNotFoundException, ExecutionManagerException;
+
 	/**
 	 * Share an {@link AnalysisSubmission} with a given {@link Project}
 	 * 
@@ -169,4 +207,87 @@ public interface AnalysisSubmissionService extends CRUDService<Long, AnalysisSub
 	 * @return a Collection of {@link AnalysisSubmission}
 	 */
 	public Collection<AnalysisSubmission> findAnalysesByState(Collection<AnalysisState> states);
+
+	/**
+	 * Get a collection of all {@link AnalysisSubmission}s shared with a
+	 * {@link Project}.
+	 * 
+	 * @param project
+	 *            The {@link Project} to search.
+	 * @return A collection of {@link AnalysisSubmission}s.
+	 */
+	public Collection<AnalysisSubmission> getAnalysisSubmissionsSharedToProject(Project project);
+
+	/**
+	 * Get a page of the {@link AnalysisSubmission}s shared with a project.
+	 *
+	 * @param search      basic search string
+	 * @param name        analysis submission name
+	 * @param state       {@link AnalysisState} of the submission to search
+	 * @param workflowIds set of workflow UUIDs to search
+	 * @param project     {@link Project} to search in
+	 * @param pageRequest a {@link PageRequest} for the results to show
+	 * @return a page of {@link AnalysisSubmission}
+	 */
+	public Page<AnalysisSubmission> listSubmissionsForProject(String search, String name, AnalysisState state,
+			Set<UUID> workflowIds, Project project, PageRequest pageRequest);
+
+	/**
+	 * Get a page of all {@link AnalysisSubmission}s in the system
+	 *
+	 * @param search      basic search string
+	 * @param name        analysis submission name
+	 * @param state       {@link AnalysisState} of the submission to search
+	 * @param workflowIds set of workflow UUIDs to search
+	 * @param pageRequest a {@link PageRequest} for the results to show
+	 * @return a page of {@link AnalysisSubmission}
+	 */
+	public Page<AnalysisSubmission> listAllSubmissions(String search, String name, AnalysisState state,
+			Set<UUID> workflowIds, PageRequest pageRequest);
+
+	/**
+	 * Get a page of {@link AnalysisSubmission}s the given user has submitted.
+	 *
+	 * @param search      basic search string
+	 * @param name        analysis submission name
+	 * @param state       {@link AnalysisState} of the submission to search
+	 * @param user        the {@link User} to get submissions for
+	 * @param workflowIds set of workflow UUIDs to search
+	 * @param pageRequest a {@link PageRequest} for the restults to show
+	 * @return a page of {@link AnalysisSubmission}s for the given user
+	 */
+	public Page<AnalysisSubmission> listSubmissionsForUser(String search, String name, AnalysisState state, User user,
+			Set<UUID> workflowIds, PageRequest pageRequest);
+
+	/**
+	 * Update the priority of an {@link AnalysisSubmission}
+	 *
+	 * @param submission the submission to update
+	 * @param priority   the new priority
+	 * @return the updated submission
+	 */
+	public AnalysisSubmission updatePriority(AnalysisSubmission submission, AnalysisSubmission.Priority priority);
+
+	/**
+	 * Get all {@link User} generated {@link ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisOutputFile} info
+	 * @param user {@link User}
+	 * @return List of {@link ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisOutputFile} info
+	 */
+	List<ProjectSampleAnalysisOutputInfo> getAllUserAnalysisOutputInfo(User user);
+
+	/**
+	 * Get all {@link ProjectSampleAnalysisOutputInfo} for a {@link Project}.
+	 *
+	 * @param projectId {@link Project} id
+	 * @return a list of {@link ProjectSampleAnalysisOutputInfo}
+	 */
+	List<ProjectSampleAnalysisOutputInfo> getAllAnalysisOutputInfoSharedWithProject(Long projectId);
+
+	/**
+	 * Get all automated {@link ProjectSampleAnalysisOutputInfo} for a {@link Project}.
+	 *
+	 * @param projectId {@link Project} id
+	 * @return a list of {@link ProjectSampleAnalysisOutputInfo}
+	 */
+	List<ProjectSampleAnalysisOutputInfo> getAllAutomatedAnalysisOutputInfoForAProject(Long projectId);
 }

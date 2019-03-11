@@ -1,31 +1,38 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="template/page">
 
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      data-layout-decorate="~{template/page}">
 <head>
-    <style>
-        .analysis-details .sidebar__heading {
-            transition: all 0.5s ease;
-        }
-    </style>
-    <script th:inline="javascript">
-        window.dependencies = ['irida.analysis'];
-        var PAGE = {
-            URLS: {
-                download: /*[[@{/analysis/ajax/download/}]]*/ '',
-                sistr: /*[[@{/analysis/ajax/sistr/{id}(id=${analysisSubmission.getId()})}]]*/ '',
-                status: /*[[@{/analysis/ajax/status/{id}(id=${analysisSubmission.getId()})}]]*/ '/analysis/ajax/status',
-                share: /*[[@{/analysis/ajax/{id}/share/(id=${analysisSubmission.getId()})}]]*/ '/analysis/ajax/share'
-            },
-            NEWICK: /*[[${newick}]]*/ ''
-        };
-    </script>
+  <link rel="stylesheet" th:href="@{/resources/dist/css/analysis.bundle.css}">
+  <link rel="stylesheet" th:href="@{/resources/dist/css/sample-files.bundle.css}">
+  <style>
+    .analysis-details .sidebar__heading {
+      transition: all 0.5s ease;
+    }
+  </style>
+  <script th:inline="javascript">
+    var PAGE = {
+      URLS: {
+        base: /*[[@{/analysis/ajax/}]]*/ '/analysis/ajax/',
+        download: /*[[@{/analysis/ajax/download/}]]*/ '',
+        sistr: /*[[@{/analysis/ajax/sistr/{id}(id=${analysisSubmission.getId()})}]]*/ '',
+        jobErrors: /*[[@{/analysis/ajax/{id}/job-errors/(id=${analysisSubmission.getId()})}]]*/ '',
+        status: /*[[@{/analysis/ajax/status/{id}(id=${analysisSubmission.getId()})}]]*/ '/analysis/ajax/status',
+        share: /*[[@{/analysis/ajax/{id}/share/(id=${analysisSubmission.getId()})}]]*/ '/analysis/ajax/share',
+        saveResults: /*[[@{/analysis/ajax/{id}/save-results/(id=${analysisSubmission.getId()})}]]*/ '/analysis/ajax/save-results'
+      },
+      NEWICK: /*[[${newick}]]*/ '',
+      ID: /*[[${analysisSubmission.getId().toString()}]]*/ '',
+    };
+  </script>
+
 </head>
 
 <body>
     <div layout:fragment="page" ng-app="irida.analysis" th:with="isCompleted=${#strings.equalsIgnoreCase(analysisSubmission.getAnalysisState().toString(), 'COMPLETED')},
         isError=${#strings.equalsIgnoreCase(analysisSubmission.getAnalysisState().toString(), 'ERROR')},
-        analysis=${analysisSubmission.getAnalysis()}" ng-controller="StateController as stateController" ddl:bundle-includes="analysis">
-        <main class="col-md-9 col-md-push-3" layout:fragment="main">
+        analysis=${analysisSubmission.getAnalysis()}" ng-controller="StateController as stateController">
+    <main class="col-md-9 col-md-push-3" layout:fragment="main">
 
         </main>
         <aside class="col-md-3 col-md-pull-9 visible-md visible-lg">
@@ -72,36 +79,69 @@
                 </div>
             </div>
 
-            <div th:if="${isCompleted}" class="sidebar" th:with="files=${analysis.getAnalysisOutputFiles()}" ng-controller="FileDownloadController as fileDownloadController">
-                <div class="sidebar__heading">
-                    <h2 th:text="#{analysis.sidebar.output-files}">__OUTPUT_FILES__</h2>
-                </div>
-                <div class="sidebar__body">
-                    <div class="sidebar__item" th:each="file : ${files}">
-                        <div class="sidebar__icon">
-                            <span class="fa fa-file-o fa-fw" aria-hidden="true"></span>
-                        </div>
-                        <div th:text="${file.getLabel()}"></div>
-                    </div>
-                    <div class="sidebar__item">
-                        <button class="btn btn-default btn-sm btn-block spaced-bottom" data:ng-click="'fileDownloadController.getZipFile(\'' + ${analysisSubmission.getId()} +'\')'">
+            <div th:text="#{analysis.details.version}">_Workflow_</div>
+            <div class="sidebar__value" th:if="${version} != 'unknown'" th:text="${version}"></div>
+            <div class="sidebar__value" th:if="${version} == 'unknown'" th:text="#{analysis.details.version.unknown}"></div>
+          </div>
+          <div class="sidebar__item">
+            <div class="sidebar__icon">
+                <i class="fas fa-fw fa-code-branch"></i>
+            </div>
+            <div th:text="#{analysis.details.state}">_State_</div>
+            <div class="sidebar__value" ng-bind="stateController.stateLang"></div>
+          </div>
+          <div class="sidebar__item">
+            <div class="sidebar__icon">
+                <i class="far fa-calendar-alt fa-fw"></i>
+            </div>
+            <div th:text="#{iridaThing.timestamp}">Created</div>
+            <div class="sidebar__value" th:text="${#calendars.format(analysisSubmission.getCreatedDate(), 'dd MMM yyyy')}"></div>
+          </div>
+          <div class="sidebar__item" sec:authorize="hasRole('ROLE_ADMIN')">
+            <div class="sidebar__icon">
+                <i class="fas fa-sort-amount-up fa-fw"></i>
+            </div>
+            <div th:text="#{analysis.details.priority}">_Priority_</div>
+            <div class="sidebar__value" th:text="${analysisSubmission.priority}">_High_</div>
+          </div>
+        </div>
+      </div>
+
+      <div th:if="${isCompleted}" class="sidebar" th:with="files=${analysis.getAnalysisOutputFiles()}" ng-controller="FileDownloadController as fileDownloadController">
+        <div class="sidebar__heading">
+          <h2 th:text="#{analysis.sidebar.output-files}">__OUTPUT_FILES__</h2>
+        </div>
+        <div class="sidebar__body">
+          <div class="sidebar__item" th:each="file : ${files}">
+            <div class="sidebar__icon">
+                <i class="far fa-file-alt fa-fw"></i>
+            </div>
+            <a href="#" th:href="@{/analysis/ajax/download/{aid}/file/{fid}(aid=${analysisSubmission.id},fid=${file.id})}" th:text="${file.getLabel()}">_filename_</a>
+          </div>
+          <div class="sidebar__item">
+            <button class="btn btn-default btn-sm btn-block spaced-bottom" data:ng-click="'fileDownloadController.getZipFile(\'' + ${analysisSubmission.getId()} +'\')'">
               <span class="fa fa-download" aria-hidden="true"></span>&nbsp;
               <th:block th:text="#{form.download-files}">Download Files</th:block>
             </button>
-                    </div>
-                    <div th:if="${#strings.equals(analysisType, 'phylogenomics')}" class="sidebar__item">
-                        <a th:href="@{/analysis/{id}/advanced-phylo(id=${analysisSubmission.getId()})}" class="btn btn-success btn-block" th:text="#{analysis.details.view-advanced}">_View Advanced Visualization_
+          </div>
+          <div th:if="${newick} != null" class="sidebar__item">
+            <a th:href="@{/analysis/{id}/advanced-phylo(id=${analysisSubmission.getId()})}"
+               class="btn btn-success btn-block"
+               th:text="#{analysis.details.view-advanced}">_View Advanced Visualization_
             </a>
-                    </div>
-                </div>
-            </div>
-        </aside>
-    </div>
-    <th:block layout:fragment="scripts">
-        <th:block layout:fragment="previewScripts"></th:block>
-
-        <th:block layout:fragment="pageScripts"></th:block>
-    </th:block>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <th:block layout:fragment="scripts">
+    <th:block layout:fragment="previewScripts"></th:block>
+    <script th:src="@{/resources/bower_components/angular-ui-router/release/angular-ui-router.min.js}"></script>
+    <script th:src="@{/resources/vendor/PhyloCanvas/PhyloCanvas.js}"></script>
+    <script th:src="@{/resources/js/modules/phylocanvas/PhyloCanvasDirective.js}"></script>
+    <script th:src="@{/resources/js/modules/navs/SubNavDirective.js}"></script>
+    <script th:src="@{/resources/dist/js/analysis.bundle.js}"></script>
+  </th:block>
 </body>
 
 </html>

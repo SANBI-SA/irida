@@ -1,20 +1,5 @@
 package ca.corefacility.bioinformatics.irida.service.remote;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.time.DateUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-
 import ca.corefacility.bioinformatics.irida.exceptions.IridaOAuthException;
 import ca.corefacility.bioinformatics.irida.exceptions.ProjectSynchronizationException;
 import ca.corefacility.bioinformatics.irida.model.MutableIridaThing;
@@ -30,6 +15,7 @@ import ca.corefacility.bioinformatics.irida.model.sample.Sample;
 import ca.corefacility.bioinformatics.irida.model.sample.SampleSequencingObjectJoin;
 import ca.corefacility.bioinformatics.irida.model.sample.metadata.MetadataEntry;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
+import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.security.ProjectSynchronizationAuthenticationToken;
@@ -38,6 +24,16 @@ import ca.corefacility.bioinformatics.irida.service.RemoteAPITokenService;
 import ca.corefacility.bioinformatics.irida.service.SequencingObjectService;
 import ca.corefacility.bioinformatics.irida.service.sample.MetadataTemplateService;
 import ca.corefacility.bioinformatics.irida.service.sample.SampleService;
+import org.apache.commons.lang3.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service class to run a project synchornization task. Ths class will be
@@ -138,7 +134,7 @@ public class ProjectSynchronizationService {
 			User readBy = project.getRemoteStatus().getReadBy();
 			setAuthentication(readBy);
 
-			logger.debug("Syncing project at " + project.getRemoteStatus().getURL());
+			logger.trace("Syncing project at " + project.getRemoteStatus().getURL());
 
 			try {
 				RemoteAPI api = project.getRemoteStatus().getApi();
@@ -147,17 +143,21 @@ public class ProjectSynchronizationService {
 				syncProject(project);
 			} catch (IridaOAuthException e) {
 				logger.trace("Can't sync project " + project.getRemoteStatus().getURL() + " due to oauth error:", e);
+				//re-reading project to get updated version
+				project = projectService.read(project.getId());
 				project.getRemoteStatus().setSyncStatus(SyncStatus.UNAUTHORIZED);
 				projectService.update(project);
 			} catch (Exception e) {
 				logger.debug("An error occurred while synchronizing project " + project.getRemoteStatus().getURL(), e);
+				//re-reading project to get updated version
+				project = projectService.read(project.getId());
 				project.getRemoteStatus().setSyncStatus(SyncStatus.ERROR);
 				projectService.update(project);
 			} finally {
 				// clear the context holder when you're done
 				SecurityContextHolder.clearContext();
 
-				logger.debug("Done project " + project.getRemoteStatus().getURL());
+				logger.trace("Done project " + project.getRemoteStatus().getURL());
 			}
 
 		}
@@ -173,6 +173,7 @@ public class ProjectSynchronizationService {
 	 */
 	private void syncProject(Project project) {
 		project.getRemoteStatus().setSyncStatus(SyncStatus.UPDATING);
+		project.getRemoteStatus().setLastUpdate(new Date());
 		projectService.update(project);
 
 		String projectURL = project.getRemoteStatus().getURL();
@@ -186,6 +187,11 @@ public class ProjectSynchronizationService {
 		if (checkForChanges(project.getRemoteStatus(), readProject)) {
 			logger.debug("found changes for project " + readProject.getSelfHref());
 
+			// need to keep the status and frequency of the local project
+			RemoteStatus originalStatus = project.getRemoteStatus();
+			readProject.getRemoteStatus().setSyncStatus(originalStatus.getSyncStatus());
+			readProject.setSyncFrequency(project.getSyncFrequency());
+
 			project = projectService.update(readProject);
 		}
 
@@ -195,36 +201,77 @@ public class ProjectSynchronizationService {
 		Map<String, Sample> samplesByUrl = new HashMap<>();
 		localSamples.forEach(j -> {
 			Sample sample = j.getObject();
-			String url = sample.getRemoteStatus().getURL();
+			
+			// If a user has added a sample for some reason, ignore it
+			if (sample.getRemoteStatus() != null) {
+				String url = sample.getRemoteStatus().getURL();
 
-			samplesByUrl.put(url, sample);
+				samplesByUrl.put(url, sample);
+			} else {
+				logger.warn("Sample " + sample.getId() + " is not a remote sample.  It will not be synchronized.");
+			}
 		});
 
+		//read the remote samples from the remote API
 		List<Sample> readSamplesForProject = sampleRemoteService.getSamplesForProject(readProject);
 
+		//get a list of all remote URLs in the project
+		Set<String> remoteUrls = readSamplesForProject.stream()
+				.map(s -> s.getRemoteStatus()
+						.getURL())
+				.collect(Collectors.toSet());
+
+		// Check for local samples which no longer exist by URL
+		Set<String> localUrls = new HashSet<>(samplesByUrl.keySet());
+		//remove any URL from the local list that we've seen remotely
+		remoteUrls.forEach(s -> {
+			localUrls.remove(s);
+		});
+
+		// if any URLs still exist in localUrls, it must have been deleted remotely
+		for (String localUrl : localUrls) {
+			logger.trace("Sample " + localUrl + " has been removed remotely.  Removing from local project.");
+
+			projectService.removeSampleFromProject(project, samplesByUrl.get(localUrl));
+			samplesByUrl.remove(localUrl);
+		}
+
+		List<ProjectSynchronizationException> syncExceptions = new ArrayList<>();
 		for (Sample s : readSamplesForProject) {
 			s.setId(null);
 			s = syncSampleMetadata(s);
-			syncSample(s, project, samplesByUrl);
+			List<ProjectSynchronizationException> syncExceptionsSample = syncSample(s, project, samplesByUrl);
+
+			syncExceptions.addAll(syncExceptionsSample);
 		}
 
+		// re-read project to ensure any updates are reflected
+		project = projectService.read(project.getId());
 		project.setRemoteStatus(readProject.getRemoteStatus());
-		project.getRemoteStatus().setSyncStatus(SyncStatus.SYNCHRONIZED);
+
+		if (syncExceptions.isEmpty()) {
+			project.getRemoteStatus().setSyncStatus(SyncStatus.SYNCHRONIZED);
+		} else {
+			project.getRemoteStatus().setSyncStatus(SyncStatus.ERROR);
+
+			logger.error("Error syncing project " + project.getId() + " setting sync status to ERROR");
+		}
 
 		projectService.update(project);
 	}
 
 	/**
 	 * Synchronize a given {@link Sample} to the local installation.
-	 * 
-	 * @param sample
-	 *            the {@link Sample} to synchronize. This should have been read
-	 *            from a remote api.
-	 * @param project
-	 *            The {@link Project} the {@link Sample} belongs in.
+	 *
+	 * @param sample          the {@link Sample} to synchronize. This should have been read
+	 *                        from a remote api.
+	 * @param project         The {@link Project} the {@link Sample} belongs in.
+	 * @param existingSamples A map of samples that have already been synchronized.  These will be checked to see if they've been updated
+	 * @return A list of {@link ProjectSynchronizationException}s, empty if no errors.
 	 */
-	public void syncSample(Sample sample, Project project, Map<String, Sample> existingSamples) {
+	public List<ProjectSynchronizationException> syncSample(Sample sample, Project project, Map<String, Sample> existingSamples) {
 		Sample localSample;
+
 		if (existingSamples.containsKey(sample.getRemoteStatus().getURL())) {
 			// if the sample already exists check if it's been updated
 			localSample = existingSamples.get(sample.getRemoteStatus().getURL());
@@ -244,18 +291,24 @@ public class ProjectSynchronizationService {
 			// if the sample doesn't already exist create it
 			sample.getRemoteStatus().setSyncStatus(SyncStatus.UPDATING);
 			localSample = sampleService.create(sample);
-			projectService.addSampleToProject(project, sample);
+			projectService.addSampleToProject(project, sample, true);
 		}
 
 		// get the local files and organize by their url
-		Collection<SampleSequencingObjectJoin> localPairs = objectService.getSequencesForSampleOfType(localSample,
-				SequenceFilePair.class);
-		Map<String, SequenceFilePair> pairsByUrl = new HashMap<>();
-		localPairs.forEach(j -> {
-			SequenceFilePair pair = (SequenceFilePair) j.getObject();
-			String url = pair.getRemoteStatus().getURL();
+		
+		Collection<SampleSequencingObjectJoin> localObjects = objectService.getSequencingObjectsForSample(localSample);
 
-			pairsByUrl.put(url, pair);
+		Map<String, SequencingObject> objectsByUrl = new HashMap<>();
+		localObjects.forEach(j -> {
+			SequencingObject pair = j.getObject();
+			
+			// check if the file was actually sync'd. Someone may have
+			// concatenated it
+			if (pair.getRemoteStatus() != null) {
+				String url = pair.getRemoteStatus().getURL();
+
+				objectsByUrl.put(url, pair);
+			}
 		});
 
 		List<SequenceFilePair> sequenceFilePairsForSample = pairRemoteService.getSequenceFilePairsForSample(sample);
@@ -263,7 +316,7 @@ public class ProjectSynchronizationService {
 		List<ProjectSynchronizationException> syncErrors = new ArrayList<>();
 
 		for (SequenceFilePair pair : sequenceFilePairsForSample) {
-			if (!pairsByUrl.containsKey(pair.getRemoteStatus().getURL())) {
+			if (!objectsByUrl.containsKey(pair.getRemoteStatus().getURL())) {
 				pair.setId(null);
 				try {
 					syncSequenceFilePair(pair, localSample);
@@ -276,11 +329,13 @@ public class ProjectSynchronizationService {
 		List<SingleEndSequenceFile> unpairedFilesForSample = singleEndRemoteService.getUnpairedFilesForSample(sample);
 
 		for (SingleEndSequenceFile file : unpairedFilesForSample) {
-			file.setId(null);
-			try {
-				syncSingleEndSequenceFile(file, localSample);
-			} catch (ProjectSynchronizationException e) {
-				syncErrors.add(e);
+			if (!objectsByUrl.containsKey(file.getRemoteStatus().getURL())) {
+				file.setId(null);
+				try {
+					syncSingleEndSequenceFile(file, localSample);
+				} catch (ProjectSynchronizationException e) {
+					syncErrors.add(e);
+				}
 			}
 		}
 
@@ -288,15 +343,27 @@ public class ProjectSynchronizationService {
 			localSample.getRemoteStatus().setSyncStatus(SyncStatus.SYNCHRONIZED);
 		} else {
 			localSample.getRemoteStatus().setSyncStatus(SyncStatus.ERROR);
+
 			logger.error(
-					"Setting sample " + localSample.getId() + "sync status to ERROR due to sync errors with files");
+					"Setting sample " + localSample.getId() + " sync status to ERROR due to sync errors with files");
 		}
-		
+
 		sampleService.update(localSample);
+
+		return syncErrors;
 	}
-	
+
+	/**
+	 * Synchronize the given sample's metadata
+	 *
+	 * @param sample the sample to sync
+	 * @return the synchronized sample
+	 */
 	public Sample syncSampleMetadata(Sample sample){
 		Map<String, MetadataEntry> sampleMetadata = sampleRemoteService.getSampleMetadata(sample);
+		
+		sampleMetadata.values().forEach(e -> e.setId(null));
+		
 		Map<MetadataTemplateField, MetadataEntry> metadata = metadataTemplateService.getMetadataMap(sampleMetadata);
 		sample.setMetadata(metadata);
 		
@@ -317,6 +384,9 @@ public class ProjectSynchronizationService {
 		fileStatus.setSyncStatus(SyncStatus.UPDATING);
 		try {
 			file = singleEndRemoteService.mirrorSequencingObject(file);
+
+			file.setProcessingState(SequencingObject.ProcessingState.UNPROCESSED);
+			file.setFileProcessor(null);
 
 			file.getSequenceFile().setId(null);
 			file.getSequenceFile().getRemoteStatus().setSyncStatus(SyncStatus.SYNCHRONIZED);
@@ -346,6 +416,9 @@ public class ProjectSynchronizationService {
 		pair.getRemoteStatus().setSyncStatus(SyncStatus.UPDATING);
 		try {
 			pair = pairRemoteService.mirrorSequencingObject(pair);
+
+			pair.setProcessingState(SequencingObject.ProcessingState.UNPROCESSED);
+			pair.setFileProcessor(null);
 
 			pair.getFiles().forEach(s -> {
 				s.setId(null);
@@ -398,7 +471,7 @@ public class ProjectSynchronizationService {
 	/**
 	 * Set the given user's authentication in the SecurityContextHolder
 	 * 
-	 * @param userAuthentication
+	 * @param user
 	 *            The {@link User} to set in the context holder
 	 */
 	private void setAuthentication(User user) {

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,6 +34,7 @@ public interface UserService extends CRUDService<Long, User>, UserDetailsService
 	 * @param username
 	 *            the user's username.
 	 * @return the user corresponding to the username.
+	 * @throws EntityNotFoundException if the user cannot be found by that username
 	 */
 	public User getUserByUsername(String username) throws EntityNotFoundException;
 
@@ -68,14 +69,12 @@ public interface UserService extends CRUDService<Long, User>, UserDetailsService
 	 *            the current page
 	 * @param size
 	 *            the size of page
-	 * @param order
-	 *            the order of sorting
-	 * @param sortProperties
+	 * @param sort
 	 *            the properties to sort on
 	 * @return a page of users.
 	 */
 	public Page<Join<Project, User>> searchUsersForProject(final Project project, final String search, int page,
-			int size, Direction order, String... sortProperties);
+			int size, Sort sort);
 
 	/**
 	 * Count the number of {@link User}s in a given {@link Project}

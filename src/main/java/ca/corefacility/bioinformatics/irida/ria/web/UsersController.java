@@ -15,6 +15,7 @@ import javax.servlet.http.HttpSession;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
+import ca.corefacility.bioinformatics.irida.exceptions.PasswordReusedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +23,12 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,6 +38,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 import ca.corefacility.bioinformatics.irida.exceptions.EntityExistsException;
 import ca.corefacility.bioinformatics.irida.exceptions.EntityNotFoundException;
@@ -48,16 +54,15 @@ import ca.corefacility.bioinformatics.irida.model.user.Role;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.repositories.specification.UserSpecification;
 import ca.corefacility.bioinformatics.irida.ria.config.UserSecurityInterceptor;
-import ca.corefacility.bioinformatics.irida.ria.utilities.Formats;
-import ca.corefacility.bioinformatics.irida.ria.utilities.components.DataTable;
+import ca.corefacility.bioinformatics.irida.ria.web.components.datatables.DataTablesParams;
+import ca.corefacility.bioinformatics.irida.ria.web.components.datatables.DataTablesResponse;
+import ca.corefacility.bioinformatics.irida.ria.web.components.datatables.config.DataTablesRequest;
+import ca.corefacility.bioinformatics.irida.ria.web.components.datatables.models.DataTablesResponseModel;
+import ca.corefacility.bioinformatics.irida.ria.web.models.datatables.DTUser;
 import ca.corefacility.bioinformatics.irida.service.EmailController;
 import ca.corefacility.bioinformatics.irida.service.ProjectService;
 import ca.corefacility.bioinformatics.irida.service.user.PasswordResetService;
 import ca.corefacility.bioinformatics.irida.service.user.UserService;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 /**
  * Controller for all {@link User} related views
@@ -71,8 +76,6 @@ public class UsersController {
 	private static final String EDIT_USER_PAGE = "user/edit";
 	private static final String CREATE_USER_PAGE = "user/create";
 	private static final String ERROR_PAGE = "error";
-	private static final String SORT_BY_ID = "id";
-	private static final String SORT_ASCENDING = "asc";
 	private static final String ROLE_MESSAGE_PREFIX = "systemrole.";
 	private static final Logger logger = LoggerFactory.getLogger(UsersController.class);
 
@@ -80,9 +83,6 @@ public class UsersController {
 	private final ProjectService projectService;
 	private final PasswordResetService passwordResetService;
 	private final EmailController emailController;
-
-	private final List<String> SORT_COLUMNS = Lists.newArrayList(SORT_BY_ID, "username", "lastName",
-			"firstName", "email", "systemRole", "createdDate", "modifiedDate");
 
 	private final List<Role> adminAllowedRoles = Lists.newArrayList(Role.ROLE_ADMIN, Role.ROLE_MANAGER, Role.ROLE_USER,
 			Role.ROLE_TECHNICIAN, Role.ROLE_SEQUENCER);
@@ -164,7 +164,7 @@ public class UsersController {
 			Map<String, Object> map = new HashMap<>();
 			map.put("identifier", project.getId());
 			map.put("name", project.getName());
-			map.put("isManager", pujoin.getProjectRole().equals(ProjectRole.PROJECT_OWNER) ? true : false);
+			map.put("isManager", pujoin.getProjectRole().equals(ProjectRole.PROJECT_OWNER));
 			map.put("subscribed" , pujoin.isEmailSubscription());
 
 			String proleMessageName = "projectRole." + pujoin.getProjectRole().toString();
@@ -289,7 +289,7 @@ public class UsersController {
 					session.setAttribute(UserSecurityInterceptor.CURRENT_USER_DETAILS, user);
 				}
 
-			} catch (ConstraintViolationException | DataIntegrityViolationException ex) {
+			} catch (ConstraintViolationException | DataIntegrityViolationException | PasswordReusedException ex) {
 				errors = handleCreateUpdateException(ex, locale);
 
 				model.addAttribute("errors", errors);
@@ -346,6 +346,11 @@ public class UsersController {
 		return EDIT_USER_PAGE;
 	}
 
+	/**
+	 * Get the user creation view
+	 * @param model Model for the view
+	 * @return user creation view
+	 */
 	@RequestMapping(value = "/create", method = RequestMethod.GET)
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")
 	public String createUserPage(Model model) {
@@ -464,75 +469,62 @@ public class UsersController {
 	}
 
 	/**
-	 * Get the listing of users
-	 *
-	 * @param principal
-	 *            The logged in user
-	 * @param start
-	 *            The start page
-	 * @param length
-	 *            The length of a page
-	 * @param draw
-	 *            a WET-specific variable.
-	 * @param sortColumn
-	 *            The column to sort on
-	 * @param direction
-	 *            The direction to sort
-	 * @param searchValue
-	 *            The value to search with
-	 *
-	 * @return A Model {@code Map<String,Object>} containing the users to list
+	 * Get a list of users based on search criteria.
+	 * @param params {@link DataTablesParams} for the current Users DataTables.
+	 * @param locale {@link Locale}
+	 * @return {@link DataTablesResponse} of the filtered users list.
 	 */
 	@RequestMapping(value = "/ajax/list", produces = MediaType.APPLICATION_JSON_VALUE)
-	public @ResponseBody Map<String, Object> getAjaxUserList(final Principal principal,
-			@RequestParam(DataTable.REQUEST_PARAM_START) Integer start,
-			@RequestParam(DataTable.REQUEST_PARAM_LENGTH) Integer length,
-			@RequestParam(DataTable.REQUEST_PARAM_DRAW) Integer draw,
-			@RequestParam(value = DataTable.REQUEST_PARAM_SORT_COLUMN, defaultValue = "0") Integer sortColumn,
-			@RequestParam(value = DataTable.REQUEST_PARAM_SORT_DIRECTION, defaultValue = "asc") String direction,
-			@RequestParam(DataTable.REQUEST_PARAM_SEARCH_VALUE) String searchValue) {
+	public @ResponseBody
+	DataTablesResponse getAjaxUserList(@DataTablesRequest DataTablesParams params, Locale locale) {
 
-		String sortString;
+		Page<User> userPage = userService.search(UserSpecification.searchUser(params.getSearchValue()),
+				new PageRequest(params.getCurrentPage(), params.getLength(), params.getSort()));
 
-		try {
-			sortString = SORT_COLUMNS.get(sortColumn);
-		} catch (IndexOutOfBoundsException ex) {
-			sortString = SORT_BY_ID;
-		}
-
-		Sort.Direction sortDirection = direction.equals(SORT_ASCENDING) ? Sort.Direction.ASC : Sort.Direction.DESC;
-
-		int pageNum = start / length;
-
-		Page<User> userPage = userService.search(UserSpecification.searchUser(searchValue), pageNum, length,
-				sortDirection, sortString);
-
-		Locale locale = LocaleContextHolder.getLocale();
-		List<List<String>> usersData = new ArrayList<>();
+		List<DataTablesResponseModel> usersData = new ArrayList<>();
 		for (User user : userPage) {
 			// getting internationalized system role from the message source
 			String roleMessageName = "systemrole." + user.getSystemRole().getName();
 			String systemRole = messageSource.getMessage(roleMessageName, null, locale);
 
-			List<String> row = new ArrayList<>();
-			row.add(user.getId().toString());
-			row.add(user.getUsername());
-			row.add(user.getLastName());
-			row.add(user.getFirstName());
-			row.add(user.getEmail());
-			row.add(systemRole);
-			row.add(Formats.DATE.format(user.getCreatedDate()));
-			row.add(user.getModifiedDate().toString());
-			usersData.add(row);
+			usersData.add(new DTUser(user.getId(), user.getUsername(), user.getFirstName(), user.getLastName(), user.getEmail(), systemRole,
+					user.getCreatedDate(), user.getModifiedDate(), user.getLastLogin()));
 		}
 
-		Map<String, Object> map = new HashMap<>();
-		map.put(DataTable.RESPONSE_PARAM_DRAW, draw);
-		map.put(DataTable.RESPONSE_PARAM_RECORDS_TOTAL, userPage.getTotalElements());
-		map.put(DataTable.RESPONSE_PARAM_RECORDS_FILTERED, userPage.getTotalElements());
+		return new DataTablesResponse(params, userPage, usersData);
+	}
 
-		map.put(DataTable.RESPONSE_PARAM_DATA, usersData);
-		return map;
+
+	/**
+	 * Check that username not already taken
+	 * @param username Username to check existence of
+	 * @return true if username not taken
+	 */
+	@RequestMapping(value = "/validate-username", method = RequestMethod.GET)
+	@ResponseBody
+	public Boolean usernameExists(@RequestParam String username) {
+		try {
+			userService.getUserByUsername(username);
+			return false;
+		} catch (UsernameNotFoundException e) {
+			return true;
+		}
+	}
+
+	/**
+	 * Check that email not already taken
+	 * @param email Email address to check existence of
+	 * @return true if email not taken
+	 */
+	@RequestMapping(value = "/validate-email", method = RequestMethod.GET)
+	@ResponseBody
+	public Boolean emailExists(@RequestParam String email) {
+		try {
+			userService.loadUserByEmail(email);
+			return false;
+		} catch (EntityNotFoundException e) {
+			return true;
+		}
 	}
 
 	/**
@@ -567,6 +559,9 @@ public class UsersController {
 			EntityExistsException eex = (EntityExistsException) ex;
 			errors.put(eex.getFieldName(), eex.getMessage());
 		}
+		else if(ex instanceof PasswordReusedException){
+			errors.put("password", messageSource.getMessage("user.edit.passwordReused", null, locale));
+		}
 
 		return errors;
 	}
@@ -588,7 +583,7 @@ public class UsersController {
 	/**
 	 * Check if the logged in user is allowed to edit the given user.
 	 *
-	 * @param principal
+	 * @param principalUser
 	 *            The currently logged in principal
 	 * @param user
 	 *            The user to edit
@@ -626,6 +621,7 @@ public class UsersController {
 		int ALPHABET_SIZE = 26;
 		int SINGLE_DIGIT_SIZE = 10;
 		int RANDOM_LENGTH = PASSWORD_LENGTH - 3;
+		String SPECIAL_CHARS = "!@#$%^&*()+?/<>=.\\{}";
 
 		List<Character> pwdArray = new ArrayList<>(PASSWORD_LENGTH);
 		SecureRandom random = new SecureRandom();
@@ -639,11 +635,14 @@ public class UsersController {
 		// 3. Create 1 random number.
 		pwdArray.add((char) ('0' + random.nextInt(SINGLE_DIGIT_SIZE)));
 
-		// 4. Create 5 random.
+		// 4. Add 1 special character
+		pwdArray.add(SPECIAL_CHARS.charAt(random.nextInt(SPECIAL_CHARS.length())));
+
+		// 5. Create 5 random.
 		int c = 'A';
-		int rand = 0;
+		int rand;
 		for (int i = 0; i < RANDOM_LENGTH; i++) {
-			rand = random.nextInt(3);
+			rand = random.nextInt(4);
 			switch (rand) {
 			case 0:
 				c = '0' + random.nextInt(SINGLE_DIGIT_SIZE);
@@ -654,14 +653,17 @@ public class UsersController {
 			case 2:
 				c = 'A' + random.nextInt(ALPHABET_SIZE);
 				break;
+			case 3:
+				c = SPECIAL_CHARS.charAt(random.nextInt(SPECIAL_CHARS.length()));
+				break;
 			}
 			pwdArray.add((char) c);
 		}
 
-		// 5. Shuffle.
+		// 6. Shuffle.
 		Collections.shuffle(pwdArray, random);
 
-		// 6. Create string.
+		// 7. Create string.
 		Joiner joiner = Joiner.on("");
 		return joiner.join(pwdArray);
 	}

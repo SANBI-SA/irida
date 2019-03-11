@@ -22,10 +22,10 @@ public class AnalysesUserPage extends AbstractPage {
 	@FindBy(className = "analysis__state")
 	private List<WebElement> analysesList;
 
-	@FindBy(className = "download-analysis-btn")
+	@FindBy(className = "download-btn")
 	private List<WebElement> downloadAnalysisBtn;
 	
-	@FindBy(className = "delete-analysis-btn")
+	@FindBy(className = "remove-btn")
 	private List<WebElement> deleteAnalysisBtn;
 
 	@FindBy(className = "progress-bar")
@@ -58,7 +58,7 @@ public class AnalysesUserPage extends AbstractPage {
 		deleteAnalysisBtn.iterator().next().click();
 		WebElement deleteButton = waitForElementToBeClickable(driver.findElement(By.id("delete-analysis-button")));
 		deleteButton.click();
-		waitForDatatableAjax();
+		waitForJQueryAjaxResponse();
 	}
 
 	public void clearFilter() {

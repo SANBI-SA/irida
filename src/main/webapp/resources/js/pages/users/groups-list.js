@@ -1,57 +1,94 @@
-var groupsTable = (function(page) {
-	function groupLinkRow(data, type, full) {
-		return '<a class="item-link" title="' + data + '" href="' + page.urls.link
-				+ full.group.identifier + '"><span>' + data + '</span></a>';		
-	};
-	
-	function descriptionRow(data, type, full) {
-		return '<p class="crop">' + full.group.description + '</p>';
-	};
-	
-	function removeGroupButton(data, type, full) {
-		if (full.groupOwner || full.admin) {
-			return "<div class='btn-group pull-right' data-toggle='tooltip' data-placement='left' title='" + page.i18n.remove + "'><button type='button' class='btn btn-default btn-xs remove-group-btn'><span class='fa fa-remove'></span></div>";
-		} else {
-			return "";
-		}
-	};
-	
-	function deleteLinkCallback(row, data) {
-		var row = $(row);
-		row.find(".remove-group-btn").click(function () {
-			$("#removeGroupModal").load(page.urls.deleteModal+"#removeGroupModalGen", { 'userGroupId' : data.group.identifier}, function() {
-				var modal = $(this);
-				modal.on("show.bs.modal", function () {
-					$(this).find("#remove-group-button").off("click").click(function () {
-						$.ajax({
-							url     : page.urls.deleteGroup + data.group.identifier,
-							type    : 'DELETE',
-							success : function (result) {
-								oTable_groupsTable.ajax.reload();
-								notifications.show({
-									'msg': result.result
-								});
-								modal.modal('hide');
-							}, error: function () {
-								notifications.show({
-									'msg' : page.i18n.unexpectedRemoveError,
-									'type': 'error'
-								});
-								modal.modal('hide');
-							}
-						});
-					});
-				});
-				modal.modal('show');
-			});
-		});
-		row.find('[data-toggle="tooltip"]').tooltip();
-	};
+import $ from "jquery";
+import {
+  createButtonCell,
+  createDeleteBtn,
+  createItemLink,
+  generateColumnOrderInfo,
+  tableConfig
+} from "../../utilities/datatables-utilities";
+import { formatDate } from "../../utilities/date-utilities";
+import "../../vendor/datatables/datatables";
+import { showNotification } from "../../modules/notifications";
 
-	return {
-		groupLinkRow : groupLinkRow,
-		removeGroupButton : removeGroupButton,
-		deleteLinkCallback : deleteLinkCallback,
-		descriptionRow : descriptionRow
-	};
-})(window.PAGE);
+const table = $("#groupsTable");
+const url = table.data("url");
+
+const COLUMNS = generateColumnOrderInfo();
+
+const config = Object.assign({}, tableConfig, {
+  ajax: url,
+  columnDefs: [
+    {
+      targets: [COLUMNS.NAME],
+      render(data, type, full) {
+        return createItemLink({
+          url: `${window.PAGE.urls.link}${full.id}`,
+          label: data
+        });
+      }
+    },
+    {
+      targets: [COLUMNS.DESCRIPTION],
+      render(data) {
+        return `<p class="crop">${data}</p>`;
+      }
+    },
+    {
+      targets: [COLUMNS.CREATED_DATE, COLUMNS.MODIFIED_DATE],
+      render(data) {
+        return `<time>${formatDate({ date: data })}</time>`;
+      }
+    },
+    {
+      targets: -1,
+      render(data, type, full) {
+        if (full.admin || full.owner) {
+          const btn = createDeleteBtn();
+          btn.dataset.group = full.id;
+          return createButtonCell([btn]);
+        }
+        return "";
+      }
+    }
+  ]
+});
+
+const $dt = table.DataTable(config);
+
+$dt.on("click", ".remove-btn", function(e) {
+  const id = $(this).data("group");
+
+  $("#removeGroupModal").load(
+    window.PAGE.urls.deleteModal + "#removeGroupModalGen",
+    { userGroupId: id },
+    function() {
+      const modal = $(this);
+      modal.on("show.bs.modal", function() {
+        $(this)
+          .find("#remove-group-button")
+          .off("click")
+          .click(function() {
+            $.ajax({
+              url: `${window.PAGE.urls.deleteGroup}${id}`,
+              type: "DELETE",
+              success: function(result) {
+                $dt.ajax.reload();
+                showNotification({
+                  text: result.result
+                });
+                modal.modal("hide");
+              },
+              error: function() {
+                showNotification({
+                  text: window.PAGE.i18n.unexpectedRemoveError,
+                  type: "error"
+                });
+                modal.modal("hide");
+              }
+            });
+          });
+      });
+      modal.modal("show");
+    }
+  );
+});

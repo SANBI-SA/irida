@@ -8,12 +8,7 @@ Launching Pipelines
 ===================
 {:.no_toc}
 
-IRIDA currently provides two different pipelines for analysing your sequencing data:
-
-1. The SNVPhyl whole-genome phylogeny pipeline ([poster](https://share.corefacility.ca/public.php?service=files&t=b1fef5379e23b663d308db9ebb5b6bb5&download)), and
-2. An assembly ([SPAdes](http://bioinf.spbau.ru/spades)) and annotation ([Prokka](http://www.vicbioinformatics.com/software.prokka.shtml)) pipeline.
-
-These pipelines take as input a set of sequencing read files from different samples. The samples must first be added to a cart before a pipeline can be run.
+IRIDA provides multiple analysis pipelines for analysing your sequencing data.  These pipelines take as input a set of sequencing read files from different samples. The samples must first be added to a cart before a pipeline can be run.
 
 * this comment becomes the toc
 {:toc}
@@ -50,9 +45,7 @@ You can search for individual samples within the cart use the 'cart search' fiel
 
 ![Cart search field](images/cart-filter-input.png)
 
-Search terms can match partial samples names.  Note: projects that do not contain any samples that match the filter are hidden.  The blue label displays the number of samples that match the filter and the total number of samples in the project.
-
-![Cart search active](images/cart-filter-active.png)
+Search terms can match partial samples names.  Note: projects that do not contain any samples that match the filter are hidden.
 
 Selecting a pipeline
 --------------------
@@ -61,7 +54,7 @@ Once you've selected the samples that you want to analyse and [added them to the
 
 ![Select a pipeline button.](images/select-a-pipeline-button.png)
 
-The pipelines page will allow you to choose from the pipelines that are currently configured in IRIDA. IRIDA currently has two pipelines:
+The pipelines page will allow you to choose from the pipelines that are currently configured in IRIDA. IRIDA has multiple pipelines:
 
 ![Select a pipeline page.](images/select-a-pipeline-page.png)
 
@@ -71,11 +64,11 @@ Click on the "Select" button at the bottom, right-hand side of the pipeline that
 
 ![Reference file required.](images/reference-file-required.png)
 
-If you have the <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** role on a project, you can [add a reference file to the project](../project/#adding-reference-files-to-a-project). Reference files added to a project can be shared with all other project members.
+If you have the <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** role on a project, you can [add a reference file to the project](../project/#reference-files). Reference files added to a project can be shared with all other project members.
 
 If you do not have the <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** role on a project, or you would just like to upload a reference file for *this* pipeline, you can add a new reference file to the analysis by clicking on the "{% icon fa-upload %} Upload New" button. If you upload a reference to the analysis instead of the project, no other users will be able to see or use the file you've uploaded.
 
-When you select a pipeline that doesn't require a reference file (or you've already [uploaded one](../project/#adding-reference-files-to-a-project)), you will be presented with a list of the samples that you've selected for analysis in the pipeline:
+When you select a pipeline that doesn't require a reference file (or you've already [uploaded one](../project/#reference-files)), you will be presented with a list of the samples that you've selected for analysis in the pipeline:
 
 ![Pipeline samples.](images/pipeline-samples.png)
 
@@ -170,6 +163,68 @@ You can either click on the <img src="images/download-icon.png" class="inline" a
 The analysis details page shows you more detailed information about your pipeline submission, including the names of the files that were produced by the analysis (on the left-hand side of the page), a preview of the outputs (if available), and some tabs to view more details about how the pipeline was submitted:
 
 ![Analysis details page.](images/analysis-details-page.png)
+<figcaption>Example SNVPhyl pipeline phylogenetic tree preview</figcaption>
+
+![view-results-preview-refseq-masher]
+<figcaption>Example `refseq_masher` tabular results preview</figcaption>
+
+To download output files, you can use the "Output Files" section from this page.  To download an individual file, click on the file name.  To download *all* the outputs produced by the pipeline, you can click on the "Download Files" button.
+
+![Analysis download.](images/analysis-details-download.png)
+
+### Previewing analysis output files
+
+All analysis pipelines produce analysis output files. You can preview these output files under the **Preview** tab on the **Analysis Details** page:
+
+![view-results-preview-refseq-masher]
+<figcaption>Example `refseq_masher` tabular results preview</figcaption>
+
+For each analysis output file, you will see a panel and in each panel you will see:
+
+- a panel heading with the Galaxy tool name (e.g. "RefSeq Masher Matches") and version (e.g. "(0.1.1)"), internal IRIDA output name (e.g. "refseq-masher-matches") and output file name (e.g. "refseq-masher-matches.tsv")
+- a file download link
+- a preview of the file contents displayed as plain text or in a table
+
+#### Previewing tabular analysis output
+
+Some of the output files will be rendered in a table:
+
+
+![view-results-tabular-snvphyl-snv-table]
+<figcaption>SNVPhyl SNV  results shown in an interactive table.</figcaption>
+
+![view-results-tabular-refseq_masher-contains-default]
+<figcaption>`refseq_masher` results shown in an interactive table.</figcaption>
+
+
+
+When you scroll to the bottom row in the table, more lines will be fetched as they are needed. You can also resize the table by clicking and dragging the "resize icon"  in the corner of the panel:
+
+![view-results-resize]
+<figcaption>
+  Click and drag the "resize icon" to resize the table. 
+</figcaption>
+
+![view-results-refseq_masher-contains-resized]
+<figcaption>Resized `refseq_masher` results table</figcaption>
+
+#### Default plain text preview of analysis output
+
+Analysis output files with file extensions like `.log`, `.txt` or `.fasta` can be previewed in the browser as plain text:
+
+![view-results-plain-text-snvphyl-mapping]
+
+If an analysis output file is small enough like this log file, it will be loaded in its entirety:
+
+![view-results-plain-text-shovill-log]
+<figcaption>Notice that the `4.0 kB / 4.0 kB (100%)` indicates that 100% of the file has been loaded.</figcaption>
+
+If an analysis output file is fairly large like this FASTA file, it will be loaded in chunks as needed for viewing:
+
+![view-results-plain-text-shovill-fasta]
+<figcaption>Notice that the `24.0 kB / 693.9 kB (3.5%)` indicates that only 3.5% of the file has been loaded into this view. Scrolling to the end will trigger loading of the next chunk of this file into the view!</figcaption>
+
+
 
 ### Viewing the sequencing data submitted for analysis
 
@@ -199,7 +254,13 @@ You can click on each of the file names to expand the complete listing of *how* 
 
 You can further inspect the parameters of each of the tools that were used to generate the analysis by clicking on one of the steps:
 
-![Actual pipeline parameters.](images/actual-pipeline-parameters.png)
+![Analysis name edit.](images/actual-pipeline-parameters.png)
+
+### Edit analysis name
+
+If you are the user who submitted the pipeline, you are able to change the submission name from the results page.  Click the pencil icon next to the analysis name, enter the new analysis name, and click update.
+
+![Edit pipeline name.](images/edit-name.png)
 
 ## Sharing pipeline results
 
@@ -225,5 +286,79 @@ Pipeline results can also be shared anytime after a pipeline has been launched. 
 
  Note that for a project to be displayed in this list it must contain samples which were used in the analysis.
 
+## Saving pipeline results to a sample
+
+Some pipelines allow you to save data back to the samples in which the pipeline was ran.  The type of data which will be saved back to the samples will differ between pipelines.  For example an assembly and annotation pipeline will save the assembly to the list of files on a sample, whereas a typing pipeline such as SISTR may save a serotype to the metadata of the sample.
+
+To save analysis results back to a sample, on submission of a pipeline please select the `Save Results to Samples` checkbox on the pipeline setup page.
+
+![save-results-to-samples](images/save-results-to-samples.png)
+
+Results can also be saved after a pipeline has completed.  To save analysis results after the pipeline has finished, click the `Share Results` tab on the pipeline results page.  If you are able to save the analysis results back to the sample, a `Save Results` section will be displayed.  Click the button to save the results to the related samples.
+
+![save-results-to-samples-after](images/save-results-to-samples-after.png)
+
+
+## Downloading single sample analysis output files in batch
+
+You can download all of your single sample analysis output files in batch by clicking **Analyses>Output Files** in the top navigation bar:
+
+![](images/user-outputs.png) 
+
+You will see a table of your single sample analysis output files:
+
+![](images/batch-download-user-outputs.png)
+
+You can apply filters to any columns by clicking the column menu icon, for example, applying a filter to the `File` column:
+
+![](images/batch-download-column-filter-open.png)
+
+Filtering for files with `contigs` in the filename:
+
+![](images/batch-download-filtering-on-contains-contigs.png)
+
+You will then see a filter icon displayed beside the column name ![](images/batch-download-column-filter-icon.png)
+
+You can select the files you wish to download using the checkboxes or by holding the `Ctrl` or `Shift` keys as you click on the rows for the files you wish to download. 
+
+![](images/batch-download-multiselect-refine.png)
+
+Or you can click the checkbox in the leftmost column header to select all files displayed:
+
+![](images/batch-download-select-all.png) 
+
+Click **Download** to download. Depending on the number of files you have selected, preparation of the download may take a moment. 
+
+Single files will be downloaded as is, while multiple files will downloaded bundled together in ZIP file. 
+
+![](images/download-confirmation-ff.png) 
+
+## Errors when executing pipelines
+
+You may experience an analysis pipeline execution failure caused by an error in one or more tools within a pipeline.
+
+For example, you may encounter an error when running the "Assembly and Annotation" pipeline:
+
+![analyses-table-error](images/analyses-table-error.png)
+
+If you click on the <span class="fa fa-fw fa-question-circle"></span> icon, you can preview the Galaxy job error information:
+
+![analyses-table-error-preview](images/analyses-table-error-preview.png)
+
+If you follow the link to the analysis page, you can view all the job error information for the pipeline in error:
+
+![analysis-job-error](images/analysis-job-error.png)
+
+This information may be helpful for troubleshooting and communicating what went wrong in a particular analysis pipeline.   
 
 <a href="../samples/">Previous: Managing Samples</a>
+
+
+[view-results-plain-text-shovill-fasta]: images/view-results-plain-text-shovill-fasta.png
+[view-results-plain-text-shovill-log]: images/view-results-plain-text-shovill-log.png
+[view-results-plain-text-snvphyl-mapping]: images/view-results-plain-text-snvphyl-mapping.png
+[view-results-preview-refseq-masher]: images/view-results-preview-refseq-masher.png
+[view-results-refseq_masher-contains-resized]: images/view-results-refseq_masher-contains-resized.png
+[view-results-tabular-refseq_masher-contains-default]: images/view-results-tabular-refseq_masher-contains-default.png
+[view-results-tabular-snvphyl-snv-table]: images/view-results-tabular-snvphyl-snv-table.png
+[view-results-resize]: images/view-results-resize.png

@@ -1,7 +1,9 @@
 package ca.corefacility.bioinformatics.irida.processing.impl;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotFoundException;
-import ca.corefacility.bioinformatics.irida.model.enums.AnalysisType;
 import ca.corefacility.bioinformatics.irida.model.joins.Join;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.sample.Sample;
@@ -19,6 +20,7 @@ import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.type.BuiltInAnalysisTypes;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission.Builder;
 import ca.corefacility.bioinformatics.irida.processing.FileProcessor;
@@ -33,9 +35,9 @@ import ca.corefacility.bioinformatics.irida.service.workflow.IridaWorkflowsServi
 import com.google.common.collect.Sets;
 
 /**
- * File processor which launches a SISTR typing pipeline
- * on uploaded sequences. It will check with a sequence's associated project for
- * whether or not it should type with SISTR.
+ * File processor which launches a SISTR typing pipeline on uploaded sequences.
+ * It will check with a sequence's associated project for whether or not it
+ * should type with SISTR.
  */
 @Component
 public class SistrTypingFileProcessor implements FileProcessor {
@@ -65,13 +67,12 @@ public class SistrTypingFileProcessor implements FileProcessor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	@Transactional
-	public void process(Long sequenceFileId) throws FileProcessorException {
-		SequencingObject sequencingObject = objectRepository.findOne(sequenceFileId);
-
+	public void process(SequencingObject sequencingObject) {
 		logger.debug("Setting up SISTR typing for sequence " + sequencingObject.getId());
 
 		User admin = userRepository.loadUserByUsername("admin");
+
+		Project.AutomatedSISTRSetting automatedSISTRSetting = shouldTypeWithSISTR(sequencingObject);
 
 		// Ensure it's a paired upload. Single end can't currently be
 		// assembled/typed.
@@ -80,7 +81,7 @@ public class SistrTypingFileProcessor implements FileProcessor {
 
 			// get the workflow
 			try {
-				defaultWorkflowByType = workflowsService.getDefaultWorkflowByType(AnalysisType.SISTR_TYPING);
+				defaultWorkflowByType = workflowsService.getDefaultWorkflowByType(BuiltInAnalysisTypes.SISTR_TYPING);
 			} catch (IridaWorkflowNotFoundException e) {
 				throw new FileProcessorException("Cannot find assembly workflow", e);
 			}
@@ -89,8 +90,16 @@ public class SistrTypingFileProcessor implements FileProcessor {
 
 			// build an AnalysisSubmission
 			Builder builder = new AnalysisSubmission.Builder(pipelineUUID);
-			AnalysisSubmission submission = builder
-					.inputFilesPaired(Sets.newHashSet((SequenceFilePair) sequencingObject))
+
+			if(automatedSISTRSetting.equals(Project.AutomatedSISTRSetting.AUTO_METADATA)){
+				builder.updateSamples(true);
+			}
+			else if(automatedSISTRSetting.equals(Project.AutomatedSISTRSetting.AUTO)){
+				builder.updateSamples(false);
+			}
+
+			AnalysisSubmission submission = builder.inputFiles(Sets.newHashSet((SequenceFilePair) sequencingObject))
+					.priority(AnalysisSubmission.Priority.LOW)
 					.name("Automated SISTR Typing " + sequencingObject.toString()).build();
 			submission.setSubmitter(admin);
 
@@ -106,6 +115,7 @@ public class SistrTypingFileProcessor implements FileProcessor {
 			logger.warn("Could not run SISTR typing for sequencing object " + sequencingObject.getId()
 					+ " because it's not paired end");
 		}
+
 	}
 
 	/**
@@ -124,19 +134,18 @@ public class SistrTypingFileProcessor implements FileProcessor {
 	public boolean shouldProcessFile(Long sequencingObjectId) {
 		SequencingObject sequencingObject = objectRepository.findOne(sequencingObjectId);
 
-		return shouldTypeWithSISTR(sequencingObject);
+		return !shouldTypeWithSISTR(sequencingObject).equals(Project.AutomatedSISTRSetting.OFF);
 	}
 
 	/**
 	 * Check whether any {@link Project} associated with the
 	 * {@link SequencingObject} is set to type with SISTR.
-	 * 
-	 * @param object
-	 *            {@link SequencingObject} to check to type with SISTR.
+	 *
+	 * @param object {@link SequencingObject} to check to type with SISTR.
 	 * @return true if it should type with SISTR, false otherwise
 	 */
-	private boolean shouldTypeWithSISTR(SequencingObject object) {
-		boolean type = false;
+	private Project.AutomatedSISTRSetting shouldTypeWithSISTR(SequencingObject object) {
+		Project.AutomatedSISTRSetting type = Project.AutomatedSISTRSetting.OFF;
 
 		SampleSequencingObjectJoin sampleForSequencingObject = ssoRepository.getSampleForSequencingObject(object);
 
@@ -148,7 +157,13 @@ public class SistrTypingFileProcessor implements FileProcessor {
 			List<Join<Project, Sample>> projectForSample = psjRepository
 					.getProjectForSample(sampleForSequencingObject.getSubject());
 
-			type = projectForSample.stream().anyMatch(j -> j.getSubject().getSistrTypingUploads());
+			Set<Project.AutomatedSISTRSetting> sistrOptions = projectForSample.stream()
+					.map(j -> j.getSubject().getSistrTypingUploads()).collect(Collectors.toSet());
+
+			if (sistrOptions.contains(Project.AutomatedSISTRSetting.AUTO_METADATA)) {
+				return Project.AutomatedSISTRSetting.AUTO_METADATA;
+			} else if (sistrOptions.contains(Project.AutomatedSISTRSetting.AUTO))
+				return Project.AutomatedSISTRSetting.AUTO;
 		} else {
 			logger.warn("Cannot find sample for sequencing object.  Not typing with SISTR");
 		}

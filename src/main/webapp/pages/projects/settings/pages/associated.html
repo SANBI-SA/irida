@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorator="projects/settings/_base">
+      data-layout-decorate="~{projects/settings/_base}">
 <head>
     <title th:text="#{project.associated.heading(${project.label})}"></title>
 </head>
 <body>
 <th:block layout:fragment="settings-content">
-    <div th:object="${project}" ddl:bundle-includes="project-associated">
+    <div th:object="${project}">
         <div class="row">
             <div class="col-md-10">
                 <h2 style="margin-top: 0" th:text="#{project.associated.title}">_Projects_</h2>

@@ -8,7 +8,7 @@ Managing Samples
 ================
 {:.no_toc}
 
-Each [project](../project) in IRIDA may contain a collection of samples that corresponds to an isolate. Each sample may contain several sequencing files, either paired-end, single-end, or both. This section of the user guide describes how you can view samples, manage samples (merging, copying, renaming, exporting), and search for samples by name.
+Each [project](../project) in IRIDA may contain a collection of samples that corresponds to an isolate. Each sample may contain one or more of the following types of files: sequencing files in paired-end or single-end format, or assembled genomes. This section of the user guide describes how you can view samples, manage samples (merging, copying, renaming, exporting), and search for samples by name.
 
 * This comment becomes the toc
 {:toc}
@@ -26,6 +26,7 @@ The samples listing shows high-level sample details, such as:
 * The project that the sample belongs to (if from a related project),
 * The date that the sample was created in IRIDA.
 * Whether the sample failed IRIDA's quality control checks.  If a sample has failed QC, the cell will have a red background and warning icon <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>.  Note if you are displaying [associated project samples](#viewing-associated-samples) QC information will come from the sample's parent project.
+* Whether the sample can be modified in this project.  If the project does not have modification access, a lock icon will be displayed <i class="fa fa-lock" aria-hidden="true"></i>.
 
 ### Viewing individual sample details
 
@@ -45,7 +46,13 @@ Start by [viewing the details of an individual sample](#viewing-individual-sampl
 
 You can provide as many or as few sample details that you want -- the sample details are not used by any workflows in IRIDA (except the sample name in the SNVPhyl workflow), and (with the exception of the sample name) none of the sample details are required fields. When you've finished updating the sample details, you can click on the "Update" button at the bottom, right-hand side of the page.
 
-### Viewing sequence files
+### Viewing contained files
+
+Samples can contain different types of files, either **Sequence Files** which are produced by a sequencing instrument, or **Assemblies** which consist of the re-constructed genome from the sequence reads.
+
+![sample-contained-files](images/sample-contained-files.png)
+
+#### Viewing Sequence Files
 
 {% include tutorials/common/samples/view-sequence-files.md %}
 
@@ -65,15 +72,51 @@ If you need to delete a sequence file from IRIDA, you can do so by clicking on t
 
 You can only delete a sequence file from a sample if you have the project <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** role on the project.
 
+#### Concatenating sequence files
+
+In cases where a top-up run or any other additional data is added to a sample, you may want to combine the sequence files into a single *concatenated* file.  IRIDA allows you to do this under the *Concatenate Files* page.
+
+![Concatenate link]({{ site.baseurl }}/images/tutorials/common/samples/concatenate-link.png)
+
+In the concatenation page you must select 2 or more sequence file objects **of the same type** to concatenate.  If you have selected a collection of files which cannot be concatenated, a warning will be displayed.
+
+![Concatenate page]({{ site.baseurl }}/images/tutorials/common/samples/concatenate-page.png)
+
+Once you have selected your files to concatenate, you have the following options:
+
+* *New filename* - This will set the base name of the new concatenated files.  For paired-end data a modifier will be appended to determine the forward and reverse files.
+* *Remove originals* - This will remove the original files from the sample, leaving only the new concatenated file.
+
+Once you have selected your files and selected your options, click *Submit* to begin the concatenation.  This may take a while, so you should stay on this page until the process is complete.  Once your files are concatenated, you will be redirected back to the sample-files page.
+
+#### Viewing genome assemblies
+
+Samples can also contain assembled genomes.
+
+![sample-automated-assembly](images/sample-automated-assembly.png)
+
+Genome assemblies can be linked to samples in two ways:
+
+1. By enabling [automated assemblies](../project/#automated-pipelines), which will be triggered on upload of sequencing files in the appropriate project.
+2. Or by selecting the option to save assemblies back to a sample from the [Launch Pipelines](../pipelines/#saving-pipeline-results-to-a-sample) page.
+
+The assembled genome file can be downloaded by clicking the <span class="fa fa-fw fa-download"></span> icon.
+
+#### Deleting genome assemblies
+
+Assembled genomes may be deleted from a sample by selecting the <img src="images/delete-icon.png" alt="Delete icon" class="inline"> icon.
+
+![delete-sample-assembly](images/delete-sample-assembly.png)
+
 #### Viewing automated assemblies
 
-If the project manager has enabled automated assemblies for uploaded data an assembly may be shown for a sequence file.
+If the project manager has enabled automated assemblies for uploaded data an assembly will be shown associated with the particular sequence files used to generate the assembled genome.
 
 ![Automated assembly](images/automated-assembly.png)
 
-The assembly status will be displayed along with a link to view the assembly results page.  For more information on viewing pipeline results see the [pipeline documentation](../pipelines/#viewing-pipeline-results)  
+The assembly status will be displayed along with a link to view the assembly results page.  On completion, the assembled genome will be saved back to the Sample.  For more information on viewing pipeline results see the [pipeline documentation](../pipelines/#viewing-pipeline-results)  
 
-See the [project documentation](../project#managing-automated-assemblies) for information on enabling automated assembly.
+See the [project documentation](../project#automated-pipelines) for information on enabling automated assembly.
 
 Adding a new sample
 -------------------
@@ -206,15 +249,15 @@ Alternatively, there is a dropdown next to the select all checkbox that allows y
 
 ![Selected sample counts.](images/samples-select-cb-dropdown.png)
 
-### Copying samples between projects
+### Sharing samples between projects
 
 {% include tutorials/common/samples/copy-samples.md %}
 
 ### Moving samples between projects
 
-An alternative to [copying samples between projects](#copying-samples-between-projects) is to **move** a sample between projects. Unlike copying, when a sample is moved, the original sample is removed.
+An alternative to [sharing samples between projects](#sharing-samples-between-projects) is to **move** a sample between projects. Unlike sharing, when a sample is moved, the original sample is removed.
 
-Like copying samples, you must be a project <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** on **both** the project that you are moving the sample *from*, and the project that you are moving the sample *to*.
+Like sharing samples, you must be a project <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** on **both** the project that you are moving the sample *from*, and the project that you are moving the sample *to*.  In addition, the source project you are sharing *from* must **not** be a remote project.
 
 Start by [selecting the samples](#selecting-samples) that you want to move to the other project. When you've selected the samples that you want to move, click on the "Samples" button just above the samples list and select "Move Samples":
 
@@ -226,11 +269,13 @@ In the dialog that appears you will be presented with a list of the samples that
 
 When you click on the drop-down box to select a project, you can either visually find the project that you want, or you can filter the projects by their name by typing into the text field.
 
+If you have selected samples that are non-modifiable in your current project, you will be shown a warning that the samples you are moving will also be non-modifiable in the new project.
+
 Once you've selected the project that you want to move the samples to, click on the "Move Samples" button.
 
 ### Merging samples within a project
 
-If a sample was created when sequencing data was uploaded with an incorrect name, you may want to merge two samples together. When you merge two samples, you will move all of the **sequencing files** from one sample to another, then **delete the original sample**. **None** of the sample metadata will be copied between the merged samples, instead you will select one sample as the target for the sample merge. Only users with the project <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** role can merge samples in a project.
+If a sample was created when sequencing data was uploaded with an incorrect name, you may want to merge two samples together. When you merge two samples, you will move all of the **sequencing files** and **assembled genomes** from one sample to another, then **delete the original sample**. **None** of the sample metadata will be copied between the merged samples, instead you will select one sample as the target for the sample merge. Only users with the project <img src="images/manager-icon.png" class="inline" alt="Manager role icon."> **Manager** role can merge samples in a project and samples cannot be merged within **remote** projects.
 
 Start by [selecting the samples](#selecting-samples) that you want to merge. You **must** select more than one sample to enable the merge samples button. Once you've selected the two or more samples that you would like to merge, click on the "Samples" button just above the samples list and select "Merge Samples":
 
@@ -245,6 +290,8 @@ Click on the sample name under "**Select a sample to merge into**" to choose whi
 You may also (optionally) rename the target sample by entering a new sample name under "**Rename sample**". The sample name must be **at least** 3 characters long, and **must not** contain white space characters (tab or space) or any of the following characters: `? ( ) [ ] / \ = + < > : ; " , * ^ | & ' .`. If you do not want to rename the target sample, leave this field blank.
 
 Once you've finished choosing the sample to merge into, click on the "Complete Merge" button at the bottom of the dialog.
+
+Note if you select samples that are non-modifiable, a warning will be displayed that you cannot merge the selected samples.
 
 Exporting samples
 -----------------

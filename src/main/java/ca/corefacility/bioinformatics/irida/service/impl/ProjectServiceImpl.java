@@ -1,11 +1,6 @@
 package ca.corefacility.bioinformatics.irida.service.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -37,10 +32,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
 import ca.corefacility.bioinformatics.irida.events.annotations.LaunchesProjectEvent;
 import ca.corefacility.bioinformatics.irida.exceptions.EntityExistsException;
 import ca.corefacility.bioinformatics.irida.exceptions.EntityNotFoundException;
@@ -64,9 +55,7 @@ import ca.corefacility.bioinformatics.irida.model.project.ReferenceFile;
 import ca.corefacility.bioinformatics.irida.model.remote.RemoteStatus.SyncStatus;
 import ca.corefacility.bioinformatics.irida.model.sample.Sample;
 import ca.corefacility.bioinformatics.irida.model.sample.SampleSequencingObjectJoin;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.user.Role;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.user.group.UserGroup;
@@ -83,8 +72,13 @@ import ca.corefacility.bioinformatics.irida.repositories.joins.project.UserGroup
 import ca.corefacility.bioinformatics.irida.repositories.joins.sample.SampleSequencingObjectJoinRepository;
 import ca.corefacility.bioinformatics.irida.repositories.referencefile.ReferenceFileRepository;
 import ca.corefacility.bioinformatics.irida.repositories.sample.SampleRepository;
+import ca.corefacility.bioinformatics.irida.repositories.sequencefile.SequencingObjectRepository;
 import ca.corefacility.bioinformatics.irida.repositories.user.UserRepository;
 import ca.corefacility.bioinformatics.irida.service.ProjectService;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * A specialized service layer for projects.
@@ -95,7 +89,7 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 
 	// settings that can be updated locally for a remote project
 	public List<String> VALID_LOCAL_SETTINGS = Lists.newArrayList("assembleUploads", "syncFrequency", "remoteStatus",
-			"genomeSize", "requiredCoverage", "sistrTypingUploads");
+			"genomeSize", "minimumCoverage", "maximumCoverage", "sistrTypingUploads");
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectServiceImpl.class);
 
@@ -109,6 +103,7 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	private final UserGroupProjectJoinRepository ugpjRepository;
 	private final SampleSequencingObjectJoinRepository ssoRepository;
 	private final ProjectAnalysisSubmissionJoinRepository pasRepository;
+	private final SequencingObjectRepository sequencingObjectRepository;
 	private final ProjectRepository projectRepository;
 
 	@Autowired
@@ -117,7 +112,8 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 			ProjectSampleJoinRepository psjRepository, RelatedProjectRepository relatedProjectRepository,
 			ReferenceFileRepository referenceFileRepository, ProjectReferenceFileJoinRepository prfjRepository,
 			final UserGroupProjectJoinRepository ugpjRepository, SampleSequencingObjectJoinRepository ssoRepository,
-			ProjectAnalysisSubmissionJoinRepository pasRepository, Validator validator) {
+			ProjectAnalysisSubmissionJoinRepository pasRepository,
+			SequencingObjectRepository sequencingObjectRepository, Validator validator) {
 		super(projectRepository, validator, Project.class);
 		this.projectRepository = projectRepository;
 		this.sampleRepository = sampleRepository;
@@ -130,6 +126,7 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 		this.ugpjRepository = ugpjRepository;
 		this.ssoRepository = ssoRepository;
 		this.pasRepository = pasRepository;
+		this.sequencingObjectRepository = sequencingObjectRepository;
 	}
 
 	/**
@@ -149,16 +146,6 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	@PreAuthorize("hasRole('ROLE_ADMIN') or hasPermission(#id, 'canReadProject')")
 	public Revisions<Integer, Project> findRevisions(Long id) throws EntityRevisionDeletedException {
 		return super.findRevisions(id);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	@PreAuthorize("hasRole('ROLE_USER')")
-	public Page<Project> search(Specification<Project> specification, int page, int size, Direction order,
-			String... sortProperties) {
-		return super.search(specification, page, size, order, sortProperties);
 	}
 
 	/**
@@ -369,8 +356,8 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	@Override
 	@Transactional
 	@LaunchesProjectEvent(SampleAddedProjectEvent.class)
-	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_SEQUENCER') or hasPermission(#project, 'isProjectOwner')")
-	public ProjectSampleJoin addSampleToProject(Project project, Sample sample) {
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_SEQUENCER') or (hasPermission(#project, 'isProjectOwner'))")
+	public ProjectSampleJoin addSampleToProject(Project project, Sample sample, boolean owner) {
 		logger.trace("Adding sample to project.");
 
 		// Check to ensure a sample with this sequencer id doesn't exist in this
@@ -393,7 +380,7 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 			}
 		}
 
-		ProjectSampleJoin join = new ProjectSampleJoin(project, sample);
+		ProjectSampleJoin join = new ProjectSampleJoin(project, sample, owner);
 
 		try {
 			return psjRepository.save(join);
@@ -411,7 +398,13 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	@LaunchesProjectEvent(SampleAddedProjectEvent.class)
 	@PreAuthorize("hasRole('ROLE_ADMIN') or ( hasPermission(#source, 'isProjectOwner') and hasPermission(#destination, 'isProjectOwner'))")
 	public ProjectSampleJoin moveSampleBetweenProjects(Project source, Project destination, Sample sample) {
-		ProjectSampleJoin join = addSampleToProject(destination, sample);
+		//read the existing ProjectSampleJoin to see if we're the owner
+		ProjectSampleJoin projectSampleJoin = psjRepository.readSampleForProject(source, sample);
+
+		//set the ownership on the sample given the existing permissions
+		ProjectSampleJoin join = addSampleToProject(destination, sample, projectSampleJoin.isOwner());
+
+		//remove the old join
 		removeSampleFromProject(source, sample);
 
 		return join;
@@ -422,7 +415,56 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	 */
 	@Override
 	@Transactional
-	@PreAuthorize("hasRole('ROLE_ADMIN') or hasPermission(#project, 'isProjectOwner')")
+	@LaunchesProjectEvent(SampleAddedProjectEvent.class)
+	@PreAuthorize("hasPermission(#source, 'canManageLocalProjectSettings')"
+			+ " and hasPermission(#destination, 'isProjectOwner')"
+			+ " and hasPermission(#samples, 'canReadSample')"
+			+ " and ((not #giveOwner) or hasPermission(#samples, 'canUpdateSample'))")
+	public List<ProjectSampleJoin> shareSamples(Project source, Project destination, Collection<Sample> samples,
+			boolean giveOwner) {
+
+		List<ProjectSampleJoin> newJoins = new ArrayList<>();
+
+		for (Sample sample : samples) {
+			ProjectSampleJoin newJoin = addSampleToProject(destination, sample, giveOwner);
+			
+			logger.trace("Shared sample " + sample.getId() + " to project " + destination.getId());
+
+			newJoins.add(newJoin);
+		}
+
+		return newJoins;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Transactional
+	@LaunchesProjectEvent(SampleAddedProjectEvent.class)
+	@PreAuthorize("hasPermission(#source, 'isProjectOwner') and hasPermission(#destination, 'isProjectOwner') "
+			+ "and hasPermission(#samples, 'canReadSample') ")
+	public List<ProjectSampleJoin> moveSamples(Project source, Project destination, Collection<Sample> samples) {
+
+		List<ProjectSampleJoin> newJoins = new ArrayList<>();
+
+		for (Sample sample : samples) {
+			ProjectSampleJoin newJoin = moveSampleBetweenProjects(source, destination, sample);
+
+			logger.trace("Moved sample " + sample.getId() + " to project " + destination.getId());
+
+			newJoins.add(newJoin);
+		}
+
+		return newJoins;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Transactional
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasPermission(#project, 'canManageLocalProjectSettings')")
 	@LaunchesProjectEvent(SampleRemovedProjectEvent.class)
 	public void removeSampleFromProject(Project project, Sample sample) {
 		ProjectSampleJoin readSampleForProject = psjRepository.readSampleForProject(project, sample);
@@ -439,7 +481,7 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	 */
 	@Override
 	@Transactional
-	@PreAuthorize("hasRole('ROLE_ADMIN') or hasPermission(#project, 'isProjectOwner')")
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasPermission(#project, 'canManageLocalProjectSettings')")
 	@LaunchesProjectEvent(SampleRemovedProjectEvent.class)
 	public void removeSamplesFromProject(Project project, Iterable<Sample> samples) {
 		for (Sample s : samples) {
@@ -581,7 +623,7 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	 * {@inheritDoc}
 	 */
 	@Override
-	@PreAuthorize("hasRole('ROLE_ADMIN') or hasPermission(#p, 'isProjectOwner')")
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasPermission(#p, 'canManageLocalProjectSettings')")
 	public Page<Project> getUnassociatedProjects(final Project p, final String searchName, final Integer page, final Integer count,
 			final Direction sortDirection, final String... sortedBy) {
 
@@ -600,12 +642,12 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	 */
 	@Override
 	@PreAuthorize("hasRole('ROLE_USER')")
-	public Page<Project> findProjectsForUser(final String search, final String filterName, final String filterOrganism, final Integer page,
-			final Integer count, final Direction sortDirection, final String... sortedBy) {
+	public Page<Project> findProjectsForUser(final String search, final Integer page,
+			final Integer count, final Sort sort) {
 		final UserDetails loggedInDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		final User loggedIn = userRepository.loadUserByUsername(loggedInDetails.getUsername());
-		final PageRequest pr = new PageRequest(page, count, sortDirection, getOrDefaultSortProperties(sortedBy));
-		return projectRepository.findAll(searchForProjects(search, filterName, filterOrganism, loggedIn), pr);
+		final PageRequest pr = new PageRequest(page, count, getOrDefaultSort(sort));
+		return projectRepository.findAll(searchForProjects(search, null, null, loggedIn), pr);
 	}
 	
 	/**
@@ -613,10 +655,9 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	 */
 	@Override
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	public Page<Project> findAllProjects(final String search, final String filterName, final String filterOrganism, final Integer page,
-			final Integer count, final Direction sortDirection, final String... sortedBy) {
-		final PageRequest pr = new PageRequest(page, count, sortDirection, getOrDefaultSortProperties(sortedBy));
-		return projectRepository.findAll(searchForProjects(search, filterName, filterOrganism, null), pr);
+	public Page<Project> findAllProjects(String searchValue, int currentPage, int length, Sort sort) {
+		final PageRequest pr = new PageRequest(currentPage, length, sort);
+		return projectRepository.findAll(searchForProjects(searchValue, null, null, null), pr);
 	}
 
 	/**
@@ -683,7 +724,25 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	public List<ProjectAnalysisSubmissionJoin> getProjectsForAnalysisSubmission(AnalysisSubmission submission) {
 		return pasRepository.getProjectsForSubmission(submission);
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Transactional
+	@PreAuthorize("hasPermission(#sampleIds, 'canUpdateSample')")
+	@Override
+	public Project createProjectWithSamples(Project project, List<Long> sampleIds) {
+
+		Project created = create(project);
+
+		sampleIds.forEach(sid -> {
+			Sample s = sampleRepository.findOne(sid);
+			addSampleToProject(project, s, false);
+		});
+
+		return created;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -691,12 +750,11 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 	@PostFilter("hasPermission(filterObject, 'canReadProject')")
 	@Override
 	public List<Project> getProjectsUsedInAnalysisSubmission(AnalysisSubmission submission) {
-		Set<SequenceFilePair> inputFilePairs = submission.getPairedInputFiles();
-		Set<SingleEndSequenceFile> inputFileSingle = submission.getInputFilesSingleEnd();
+		Set<SequencingObject> findSequencingObjectsForAnalysisSubmission = sequencingObjectRepository
+				.findSequencingObjectsForAnalysisSubmission(submission);
 
 		// get available projects
-		Set<Project> projectsInAnalysis = getProjectsForSequencingObjects(inputFilePairs);
-		projectsInAnalysis.addAll(getProjectsForSequencingObjects(inputFileSingle));
+		Set<Project> projectsInAnalysis = getProjectsForSequencingObjects(findSequencingObjectsForAnalysisSubmission);
 
 		return Lists.newArrayList(projectsInAnalysis);
 	}
@@ -716,6 +774,21 @@ public class ProjectServiceImpl extends CRUDServiceImpl<Long, Project> implement
 		} else {
 			return sortProperties;
 		}
+	}
+
+	/**
+	 * If the {@link Sort} is null create a default {@link Sort} for the data.
+	 *
+	 * @param sort
+	 * 		{@link Sort} for the data
+	 *
+	 * @return the create {@link Sort} if none was defined, otherwise just return the original {@link Sort}
+	 */
+	private static final Sort getOrDefaultSort(Sort sort) {
+		if (sort == null) {
+			sort = new Sort(Direction.ASC, CREATED_DATE_SORT_PROPERTY);
+		}
+		return sort;
 	}
 	
 	/**

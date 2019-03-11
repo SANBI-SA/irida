@@ -3,16 +3,18 @@ package ca.corefacility.bioinformatics.irida.repositories.analysis.submission;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.Query;
 
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisCleanedState;
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisState;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFile;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
+import ca.corefacility.bioinformatics.irida.model.project.Project;
+import ca.corefacility.bioinformatics.irida.model.project.ReferenceFile;
+import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.Analysis;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.ProjectSampleAnalysisOutputInfo;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
 import ca.corefacility.bioinformatics.irida.repositories.IridaJpaRepository;
 
@@ -59,6 +61,18 @@ public interface AnalysisSubmissionRepository extends IridaJpaRepository<Analysi
 	@Query("select s from AnalysisSubmission s where s.analysisState = ?1 and s.analysisCleanedState = ?2")
 	public List<AnalysisSubmission> findByAnalysisState(AnalysisState analysisState,
 			AnalysisCleanedState analysisCleanedState);
+	
+	/**
+	 * Finds all {@link AnalysisSubmission}s corresponding to the given workflow
+	 * ids.
+	 * 
+	 * @param workflowIds
+	 *            The workflow ids to match.
+	 * @return A list of {@link AnalysisSubmission}s matching one of the
+	 *         workflow ids.
+	 */
+	@Query("select s from AnalysisSubmission s where s.workflowId in ?1")
+	public List<AnalysisSubmission> findByWorkflowIds(Collection<UUID> workflowIds);
 
 	/**
 	 * Loads up all {@link AnalysisSubmission}s by the submitted {@link User}.
@@ -84,23 +98,50 @@ public interface AnalysisSubmissionRepository extends IridaJpaRepository<Analysi
 
 	/**
 	 * Get the Set of {@link AnalysisSubmission}s which use a given
-	 * {@link SequenceFile}
+	 * {@link SequencingObject}
 	 * 
-	 * @param file
-	 *            The {@link SequenceFile} to get submissions for
+	 * @param object
+	 *            The {@link SequencingObject} to get submissions for
 	 * @return Set of {@link AnalysisSubmission}
 	 */
-	@Query("FROM AnalysisSubmission s WHERE ?1 IN elements(s.inputFilesSingleEnd)")
-	public Set<AnalysisSubmission> findAnalysisSubmissionForSequenceFile(SingleEndSequenceFile file);
+	@Query("FROM AnalysisSubmission s WHERE ?1 IN elements(s.inputFiles)")
+	public Set<AnalysisSubmission> findAnalysisSubmissionsForSequecingObject(SequencingObject object);
 
 	/**
-	 * Get the Set of {@link AnalysisSubmission}s which use a given
-	 * {@link SequenceFilePair}
+	 * Get the Set of {@link AnalysisSubmission}s making use of the given
+	 * {@link ReferenceFile}.
 	 * 
-	 * @param pair
-	 *            The {@link SequenceFilePair} to get submissions for
-	 * @return Set of {@link AnalysisSubmission}
+	 * @param file
+	 *            The {@link ReferenceFile}.
+	 * @return A Set of {@link AnalysisSubmission}s.
 	 */
-	@Query("FROM AnalysisSubmission s WHERE ?1 IN elements(s.inputFilesPaired)")
-	public Set<AnalysisSubmission> findAnalysisSubmissionForSequenceFilePair(SequenceFilePair pair);
+	@Query("FROM AnalysisSubmission s WHERE ?1 = referenceFile")
+	public Set<AnalysisSubmission> findByReferenceFile(ReferenceFile file);
+
+	/**
+	 * Get all {@link ca.corefacility.bioinformatics.irida.model.user.User} generated analysis output information.
+	 *
+	 * @param userId {@link ca.corefacility.bioinformatics.irida.model.user.User} id
+	 * @return a list of {@link ProjectSampleAnalysisOutputInfo}
+	 */
+	List<ProjectSampleAnalysisOutputInfo> getAllUserAnalysisOutputInfo(Long userId);
+
+	/**
+	 * Get all {@link ProjectSampleAnalysisOutputInfo} shared with a {@link Project}.
+	 *
+	 * @param projectId {@link Project} id
+	 * @param workflowIds Workflow UUIDs of workflow pipelines to get output files for
+	 * @return a list of {@link ProjectSampleAnalysisOutputInfo}
+	 */
+	List<ProjectSampleAnalysisOutputInfo> getAllAnalysisOutputInfoSharedWithProject(Long projectId, Set<UUID> workflowIds);
+
+	/**
+	 * Get all automated {@link ProjectSampleAnalysisOutputInfo} for a {@link Project}.
+	 *
+	 * @param projectId {@link Project} id
+	 * @param workflowIds Workflow UUIDs of workflow pipelines to get output files for
+	 * @return a list of {@link ProjectSampleAnalysisOutputInfo}
+	 */
+	List<ProjectSampleAnalysisOutputInfo> getAllAutomatedAnalysisOutputInfoForAProject(Long projectId,
+			Set<UUID> workflowIds);
 }

@@ -1,5 +1,6 @@
 package ca.corefacility.bioinformatics.irida.config.analysis;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,12 +25,16 @@ import com.google.common.collect.Lists;
 import ca.corefacility.bioinformatics.irida.config.conditions.NonWindowsPlatformCondition;
 import ca.corefacility.bioinformatics.irida.model.user.Role;
 import ca.corefacility.bioinformatics.irida.model.user.User;
+import ca.corefacility.bioinformatics.irida.pipeline.results.AnalysisSubmissionSampleProcessor;
+import ca.corefacility.bioinformatics.irida.pipeline.results.impl.AnalysisSubmissionSampleProcessorImpl;
+import ca.corefacility.bioinformatics.irida.pipeline.results.updater.AnalysisSampleUpdater;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyHistoriesService;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyLibrariesService;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyWorkflowService;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.integration.LocalGalaxy;
 import ca.corefacility.bioinformatics.irida.repositories.analysis.submission.AnalysisSubmissionRepository;
 import ca.corefacility.bioinformatics.irida.repositories.referencefile.ReferenceFileRepository;
+import ca.corefacility.bioinformatics.irida.repositories.sample.SampleRepository;
 import ca.corefacility.bioinformatics.irida.service.AnalysisService;
 import ca.corefacility.bioinformatics.irida.service.AnalysisSubmissionService;
 import ca.corefacility.bioinformatics.irida.service.DatabaseSetupGalaxyITService;
@@ -42,7 +47,6 @@ import ca.corefacility.bioinformatics.irida.service.analysis.workspace.galaxy.An
 import ca.corefacility.bioinformatics.irida.service.analysis.workspace.galaxy.AnalysisParameterServiceGalaxy;
 import ca.corefacility.bioinformatics.irida.service.analysis.workspace.galaxy.AnalysisProvenanceServiceGalaxy;
 import ca.corefacility.bioinformatics.irida.service.analysis.workspace.galaxy.AnalysisWorkspaceServiceGalaxy;
-import ca.corefacility.bioinformatics.irida.service.remote.SampleRemoteService;
 import ca.corefacility.bioinformatics.irida.service.sample.SampleService;
 import ca.corefacility.bioinformatics.irida.service.workflow.IridaWorkflowsService;
 
@@ -89,12 +93,22 @@ public class AnalysisExecutionServiceTestConfig {
 		
 	@Autowired
 	private GalaxyWorkflowService galaxyWorkflowService;
+
+	@Autowired
+	private SequencingObjectService sequencingObjectService;
 	
 	@Autowired
-	SampleRemoteService sampleRemoteService;
+	private AnalysisSubmissionSampleProcessor analysisSubmissionSampleService;
 	
 	@Autowired
-	SequencingObjectService sequencingObjectService;
+	private SampleRepository sampleRepository;
+	
+	@Bean
+	public AnalysisSubmissionSampleProcessor analysisSubmissionSampleProcessor() {
+		List<AnalysisSampleUpdater> analysisSampleUpdaters = Lists.newLinkedList();
+
+		return new AnalysisSubmissionSampleProcessorImpl(sampleRepository, analysisSampleUpdaters);
+	}
 
 	@Lazy
 	@Bean
@@ -107,7 +121,7 @@ public class AnalysisExecutionServiceTestConfig {
 	@Bean
 	public AnalysisExecutionServiceGalaxyAsync analysisExecutionServiceGalaxyAsync() {
 		return new AnalysisExecutionServiceGalaxyAsync(analysisSubmissionService, analysisService,
-				galaxyWorkflowService, analysisWorkspaceService(), iridaWorkflowsService);
+				galaxyWorkflowService, analysisWorkspaceService(), iridaWorkflowsService, analysisSubmissionSampleService);
 	}
 	
 	@Lazy
@@ -122,7 +136,7 @@ public class AnalysisExecutionServiceTestConfig {
 	public AnalysisWorkspaceServiceGalaxy analysisWorkspaceService() {
 		return new AnalysisWorkspaceServiceGalaxy(galaxyHistoriesService, galaxyWorkflowService,
 				galaxyLibrariesService, iridaWorkflowsService, analysisCollectionServiceGalaxy(),
-				analysisProvenanceServiceGalaxy(), analysisParameterServiceGalaxy, sampleRemoteService,
+				analysisProvenanceServiceGalaxy(), analysisParameterServiceGalaxy,
 				sequencingObjectService);
 	}
 

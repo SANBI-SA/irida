@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotFoundException;
-import ca.corefacility.bioinformatics.irida.model.enums.AnalysisType;
 import ca.corefacility.bioinformatics.irida.model.joins.Join;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.sample.Sample;
@@ -19,6 +18,7 @@ import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.type.BuiltInAnalysisTypes;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission.Builder;
 import ca.corefacility.bioinformatics.irida.processing.FileProcessor;
@@ -66,9 +66,7 @@ public class AssemblyFileProcessor implements FileProcessor {
 	 */
 	@Override
 	@Transactional
-	public void process(Long sequenceFileId) throws FileProcessorException {
-		SequencingObject sequencingObject = objectRepository.findOne(sequenceFileId);
-
+	public void process(SequencingObject sequencingObject) {
 		logger.debug("Setting up automated assembly for sequence " + sequencingObject.getId());
 
 		// assembly run by admin
@@ -81,7 +79,7 @@ public class AssemblyFileProcessor implements FileProcessor {
 
 			// get the workflow
 			try {
-				defaultWorkflowByType = workflowsService.getDefaultWorkflowByType(AnalysisType.ASSEMBLY_ANNOTATION);
+				defaultWorkflowByType = workflowsService.getDefaultWorkflowByType(BuiltInAnalysisTypes.ASSEMBLY_ANNOTATION);
 			} catch (IridaWorkflowNotFoundException e) {
 				throw new FileProcessorException("Cannot find assembly workflow", e);
 			}
@@ -91,8 +89,10 @@ public class AssemblyFileProcessor implements FileProcessor {
 			// build an AnalysisSubmission
 			Builder builder = new AnalysisSubmission.Builder(pipelineUUID);
 			AnalysisSubmission submission = builder
-					.inputFilesPaired(Sets.newHashSet((SequenceFilePair) sequencingObject))
-					.name("Automated Assembly " + sequencingObject.toString()).build();
+					.inputFiles(Sets.newHashSet((SequenceFilePair) sequencingObject))
+					.priority(AnalysisSubmission.Priority.LOW)
+					.name("Automated Assembly " + sequencingObject.toString())
+					.updateSamples(true).build();
 			submission.setSubmitter(admin);
 
 			submission = submissionRepository.save(submission);
@@ -106,7 +106,7 @@ public class AssemblyFileProcessor implements FileProcessor {
 		} else {
 			logger.warn("Could not assemble sequencing object " + sequencingObject.getId()
 					+ " because it's not paired end");
-		}
+		}		
 	}
 
 	/**

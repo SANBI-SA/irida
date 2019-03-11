@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -12,18 +13,27 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowParameterException;
+import ca.corefacility.bioinformatics.irida.model.workflow.description.*;
+import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyToolDataService;
+
+import com.github.jmchilton.blend4j.galaxy.beans.TabularToolDataTable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,27 +43,30 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import ca.corefacility.bioinformatics.irida.exceptions.DuplicateSampleException;
+import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotDisplayableException;
 import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotFoundException;
-import ca.corefacility.bioinformatics.irida.model.enums.AnalysisType;
 import ca.corefacility.bioinformatics.irida.model.enums.ProjectRole;
 import ca.corefacility.bioinformatics.irida.model.joins.Join;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.project.ReferenceFile;
 import ca.corefacility.bioinformatics.irida.model.sample.Sample;
 import ca.corefacility.bioinformatics.irida.model.sample.SampleSequencingObjectJoin;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFile;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.user.Role;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.type.AnalysisType;
 import ca.corefacility.bioinformatics.irida.model.workflow.description.IridaWorkflowDescription;
 import ca.corefacility.bioinformatics.irida.model.workflow.description.IridaWorkflowParameter;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.IridaWorkflowNamedParameters;
+import ca.corefacility.bioinformatics.irida.pipeline.results.AnalysisSubmissionSampleProcessor;
 import ca.corefacility.bioinformatics.irida.ria.web.BaseController;
 import ca.corefacility.bioinformatics.irida.ria.web.analysis.CartController;
+import ca.corefacility.bioinformatics.irida.ria.web.pipelines.dto.PipelineStartParameters;
 import ca.corefacility.bioinformatics.irida.ria.web.pipelines.dto.WorkflowParametersToSave;
+import ca.corefacility.bioinformatics.irida.security.permissions.sample.UpdateSamplePermission;
 import ca.corefacility.bioinformatics.irida.service.AnalysisSubmissionService;
 import ca.corefacility.bioinformatics.irida.service.ProjectService;
 import ca.corefacility.bioinformatics.irida.service.ReferenceFileService;
@@ -98,18 +111,29 @@ public class PipelineController extends BaseController {
 	private IridaWorkflowsService workflowsService;
 	private MessageSource messageSource;
 	private final WorkflowNamedParametersService namedParameterService;
+	private UpdateSamplePermission updateSamplePermission;
+	private AnalysisSubmissionSampleProcessor analysisSubmissionSampleProcessor;
+	private GalaxyToolDataService galaxyToolDataService;
 	
 	/*
 	 * CONTROLLERS
 	 */
 	private CartController cartController;
+	
+	/*
+	 * Additional variables
+	 */
+	private String iridaPipelinePluginStyle;
 
 	@Autowired
 	public PipelineController(SequencingObjectService sequencingObjectService,
 			ReferenceFileService referenceFileService, AnalysisSubmissionService analysisSubmissionService,
 			IridaWorkflowsService iridaWorkflowsService, ProjectService projectService, UserService userService,
 			CartController cartController, MessageSource messageSource,
-			final WorkflowNamedParametersService namedParameterService) {
+			final WorkflowNamedParametersService namedParameterService,
+			UpdateSamplePermission updateSamplePermission,
+			AnalysisSubmissionSampleProcessor analysisSubmissionSampleProcessor, GalaxyToolDataService galaxyToolDataService,
+			@Qualifier("iridaPipelinePluginStyle") String iridaPipelinePluginStyle) {
 		this.sequencingObjectService = sequencingObjectService;
 		this.referenceFileService = referenceFileService;
 		this.analysisSubmissionService = analysisSubmissionService;
@@ -119,6 +143,10 @@ public class PipelineController extends BaseController {
 		this.cartController = cartController;
 		this.messageSource = messageSource;
 		this.namedParameterService = namedParameterService;
+		this.updateSamplePermission = updateSamplePermission;
+		this.analysisSubmissionSampleProcessor = analysisSubmissionSampleProcessor;
+		this.galaxyToolDataService = galaxyToolDataService;
+		this.iridaPipelinePluginStyle = iridaPipelinePluginStyle;
 	}
 
 	/**
@@ -133,7 +161,7 @@ public class PipelineController extends BaseController {
 	 */
 	@RequestMapping
 	public String getPipelineLaunchPage(final Model model, Locale locale) {
-		Set<AnalysisType> workflows = workflowsService.getRegisteredWorkflowTypes();
+		Set<AnalysisType> workflows = workflowsService.getDisplayableWorkflowTypes();
 
 		List<Map<String, String>> flows = new ArrayList<>(workflows.size());
 		workflows.stream().forEach(type -> {
@@ -141,7 +169,7 @@ public class PipelineController extends BaseController {
 			try {
 				flow = workflowsService.getDefaultWorkflowByType(type);
 				IridaWorkflowDescription description = flow.getWorkflowDescription();
-				String name = type.toString();
+				String name = type.getType();
 				String key = "workflow." + name;
 				flows.add(ImmutableMap.of(
 						"name", name,
@@ -161,6 +189,7 @@ public class PipelineController extends BaseController {
 		flows.sort((f1, f2) -> f1.get("name").compareTo(f2.get("name")));
 		model.addAttribute("counts", getCartSummaryMap());
 		model.addAttribute("workflows", flows);
+		model.addAttribute("pipeline_plugin_style", iridaPipelinePluginStyle);
 		return URL_LAUNCH;
 	}
 
@@ -180,18 +209,24 @@ public class PipelineController extends BaseController {
 	@RequestMapping(value = "/{pipelineId}")
 	public String getSpecifiedPipelinePage(final Model model, Principal principal, Locale locale, @PathVariable UUID pipelineId) {
 		String response = URL_EMPTY_CART_REDIRECT;
+		boolean canUpdateAllSamples;
 
 		Map<Project, Set<Sample>> cartMap = cartController.getSelected();
 		// Cannot run a pipeline on an empty cart!
 		if (!cartMap.isEmpty()) {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 			IridaWorkflow flow = null;
 			try {
-				flow = workflowsService.getIridaWorkflow(pipelineId);
-			} catch (IridaWorkflowNotFoundException e) {
-				logger.error("Workflow not found - See stack:", e);
+				flow = workflowsService.getDisplayableIridaWorkflow(pipelineId);
+			} catch (IridaWorkflowNotFoundException | IridaWorkflowNotDisplayableException e) {
+				logger.error("Workflow not found or not displayable - See stack:", e);
 				return "redirect:errors/not_found";
 			}
+			
+			// Check if there even is functionality to update samples from results for this pipeline
+			canUpdateAllSamples = analysisSubmissionSampleProcessor
+					.hasRegisteredAnalysisSampleUpdater(flow.getWorkflowDescription().getAnalysisType());
 
 			User user = userService.getUserByUsername(principal.getName());
 			// Get all the reference files that could be used for this pipeline.
@@ -199,6 +234,7 @@ public class PipelineController extends BaseController {
 			List<Map<String, Object>> projectList = new ArrayList<>();
 			List<Map<String, Object>> addRefList = new ArrayList<>();
 			IridaWorkflowDescription description = flow.getWorkflowDescription();
+			final String workflowName = description.getName().toLowerCase();
 			for (Project project : cartMap.keySet()) {
 				// Check to see if it requires a reference file.
 				if (description.requiresReference()) {
@@ -254,6 +290,8 @@ public class PipelineController extends BaseController {
 				projectMap.put("name", project.getLabel());
 				projectMap.put("samples", sampleList);
 				projectList.add(projectMap);
+				
+				canUpdateAllSamples &= updateSamplePermission.isAllowed(authentication, samples);
 			}
 
 			// Need to add the pipeline parameters
@@ -261,8 +299,10 @@ public class PipelineController extends BaseController {
 			final List<Map<String, Object>> parameters = new ArrayList<>();
 			if (defaultWorkflowParameters != null) {
 				final List<Map<String, String>> defaultParameters = new ArrayList<>();
-				final String workflowName = description.getName().toLowerCase();
 				for (IridaWorkflowParameter p : defaultWorkflowParameters) {
+					if (p.isRequired()) {
+						continue;
+					}
 					defaultParameters.add(ImmutableMap.of(
 							"label",
 							messageSource.getMessage("pipeline.parameters." + workflowName + "." + p.getName(), null, locale),
@@ -303,11 +343,103 @@ public class PipelineController extends BaseController {
 			model.addAttribute("referenceRequired", description.requiresReference());
 			model.addAttribute("addRefProjects", addRefList);
 			model.addAttribute("projects", projectList);
+			model.addAttribute("canUpdateSamples", canUpdateAllSamples);
+                        model.addAttribute("workflowName", workflowName);
+			model.addAttribute("dynamicSourceRequired", description.requiresDynamicSource());
+			model.addAttribute("analysisType", flow.getWorkflowDescription().getAnalysisType());
+
+			final List<Map<String, Object>> dynamicSources = new ArrayList<>();
+			if (description.requiresDynamicSource()) {
+				TabularToolDataTable galaxyToolDataTable = new TabularToolDataTable();
+				IridaWorkflowDynamicSourceGalaxy dynamicSource = new IridaWorkflowDynamicSourceGalaxy();
+				for (IridaWorkflowParameter parameter : description.getParameters()) {
+					if(parameter.isRequired() && parameter.hasDynamicSource()) {
+						try {
+							dynamicSource = parameter.getDynamicSource();
+						} catch (IridaWorkflowParameterException e) {
+							logger.debug("Dynamic Source error: ", e);
+						}
+
+						List<Object> parametersList = new ArrayList<>();
+						String dynamicSourceName;
+						Map<String, Object> toolDataTable = new HashMap<>();
+						try {
+							dynamicSourceName = dynamicSource.getName();
+							toolDataTable.put("id", dynamicSourceName);
+							toolDataTable.put("label", messageSource.getMessage("dynamicsource.label." + dynamicSourceName, null, locale));
+							toolDataTable.put("parameters", parametersList);
+
+							galaxyToolDataTable = galaxyToolDataService.getToolDataTable(dynamicSourceName);
+							List<String> labels = galaxyToolDataTable.getFieldsForColumn(dynamicSource.getDisplayColumn());
+							Iterator<String> labelsIterator = labels.iterator();
+							List<String> values = galaxyToolDataTable.getFieldsForColumn(dynamicSource.getParameterColumn());
+							Iterator<String> valuesIterator = values.iterator();
+
+							while (labelsIterator.hasNext() && valuesIterator.hasNext()) {
+								String label = labelsIterator.next();
+								String value = valuesIterator.next();
+								HashMap<String, String> toolDataTableFieldsMap = new HashMap<>();
+								toolDataTableFieldsMap.put("label", label);
+								toolDataTableFieldsMap.put("value", value);
+								toolDataTableFieldsMap.put("name", parameter.getName());
+								parametersList.add(toolDataTableFieldsMap);
+							}
+							dynamicSources.add(toolDataTable);
+						} catch (Exception e) {
+							logger.debug("Tool Data Table not found: ", e);
+						}
+					}
+				}
+				model.addAttribute("dynamicSources", dynamicSources);
+			}
+
+			final List<Map<String, Object>> paramsWithChoices = description.getParameters()
+					.stream()
+					.filter(IridaWorkflowParameter::hasChoices)
+					.map(x -> ImmutableMap.of("label", localizedParamLabel(locale, workflowName, x.getName()), "name",
+							x.getName(), "choices", x.getChoices()
+									.stream()
+									.map(c -> ImmutableMap.of("name", localizedParamOptionLabel(locale, workflowName, x.getName(), c.getName()), "value", c.getValue()))
+									.collect(Collectors.toList())))
+					.collect(Collectors.toList());
+			model.addAttribute("paramsWithChoices", paramsWithChoices);
 			response = URL_GENERIC_PIPELINE;
 		}
 
 		return response;
 	}
+
+	/**
+	 * Get localized workflow parameter label.
+	 *
+	 * If the localized workflow parameter label text is not found by the {@link MessageSource}, then log the
+	 * NoSuchMessageException and return the `paramName` as the localized parameter label.
+	 *
+	 * @param locale Message locale
+	 * @param workflowName Workflow name
+	 * @param paramName Parameter name
+	 * @return Localized parameter label if found in {@link MessageSource}; otherwise, return `paramName`.
+	 */
+	private String localizedParamLabel(Locale locale, String workflowName, String paramName) {
+		final String messageName = "pipeline.parameters." + workflowName + "." + paramName;
+		try {
+			return messageSource.getMessage(messageName, null, locale);
+		} catch (NoSuchMessageException e) {
+			logger.error("Couldn't find message for '" + messageName + "': ", e);
+			return paramName;
+		}
+	}
+
+	private String localizedParamOptionLabel(Locale locale, String workflowName, String paramName, String optionName) {
+		final String messageName = "pipeline.parameters." + workflowName + "." + paramName + "." + optionName;
+		try {
+			return messageSource.getMessage(messageName, null, locale);
+		} catch (NoSuchMessageException e) {
+			logger.error("Couldn't find message for '" + messageName + "': ", e);
+			return paramName + "." + optionName;
+		}
+	}
+
 
 	// ************************************************************************************************
 	// AJAX
@@ -316,63 +448,41 @@ public class PipelineController extends BaseController {
 	/**
 	 * Launch a pipeline
 	 *
-	 * @param locale
-	 *            the locale that the browser is using for the current request.
-	 * @param pipelineId
-	 *            the id for the {@link IridaWorkflow}
-	 * @param single
-	 *            a list of {@link SequenceFile} id's
-	 * @param paired
-	 *            a list of {@link SequenceFilePair} id's
-	 * @param parameters
-	 *            TODO: This is a hack! Update when fixing issue #100
-	 *            {@link Map} of ALL parameters passed. Only want the 'paras'
-	 *            object: a {@link Map} of pipeline parameters
-	 * @param ref
-	 *            the id for a {@link ReferenceFile}
-	 * @param name
-	 *            a user provided name for the {@link IridaWorkflow}
-	 * @param analysisDescription
-	 *            Optional description of the analysis
-	 * @param sharedProjects
-	 *            A list of {@link Project} ids to share the analysis submission
-	 *            with
-	 *
+	 * @param locale     the locale that the browser is using for the current request.
+	 * @param parameters DTO of pipeline start parameters
 	 * @return a JSON response with the status and any messages.
 	 */
-	@RequestMapping(value = "/ajax/start/{pipelineId}", method = RequestMethod.POST)
-	public @ResponseBody Map<String, Object> ajaxStartPipeline(Locale locale, @PathVariable UUID pipelineId,
-			@RequestParam(required = false) List<Long> single, @RequestParam(required = false) List<Long> paired,
-			@RequestParam(required = false) Map<String, String> parameters, @RequestParam(required = false) Long ref,
-			@RequestParam String name, @RequestParam(name = "description", required = false) String analysisDescription,
-			@RequestParam(required = false) List<Long> sharedProjects) {
-		Map<String, Object> result = ImmutableMap.of("success", true);
+	@RequestMapping(value = "/ajax/start", method = RequestMethod.POST)
+	public @ResponseBody
+	Map<String, Object> ajaxStartPipeline(Locale locale, @RequestBody final PipelineStartParameters parameters) {
 		try {
-			IridaWorkflow flow = workflowsService.getIridaWorkflow(pipelineId);
+			IridaWorkflow flow = workflowsService.getDisplayableIridaWorkflow(parameters.getWorkflowId());
 			IridaWorkflowDescription description = flow.getWorkflowDescription();
 
 			// The pipeline needs to have a name.
+			String name = parameters.getName();
 			if (Strings.isNullOrEmpty(name)) {
-				return ImmutableMap
-						.of("error", messageSource.getMessage("workflow.no-name-provided", null, locale));
+				return ImmutableMap.of("error", messageSource.getMessage("workflow.no-name-provided", null, locale));
 			}
 
 
 			// Check to see if a reference file is required.
+			Long ref = parameters.getRef();
 			if (description.requiresReference() && ref == null) {
-				return ImmutableMap.of("error", messageSource.getMessage("pipeline.error.no-reference.pipeline-start", null, locale));
+				return ImmutableMap.of("error",
+						messageSource.getMessage("pipeline.error.no-reference.pipeline-start", null, locale));
 			}
 
 			// Get a list of the files to submit
 			List<SingleEndSequenceFile> singleEndFiles = new ArrayList<>();
 			List<SequenceFilePair> sequenceFilePairs = new ArrayList<>();
-
+			List<Long> single = parameters.getSingle();
 			if (single != null) {
 				Iterable<SequencingObject> readMultiple = sequencingObjectService.readMultiple(single);
 				
 				readMultiple.forEach(f -> {
-					if (f instanceof SingleEndSequenceFile) {
-						throw new IllegalArgumentException("file " + f.getId() + " not a single end file");
+					if (!(f instanceof SingleEndSequenceFile)) {
+						throw new IllegalArgumentException("file " + f.getId() + " not a SingleEndSequenceFile");
 					}
 					
 					singleEndFiles.add((SingleEndSequenceFile) f);
@@ -381,13 +491,13 @@ public class PipelineController extends BaseController {
 				// Check the single files for duplicates in a sample, throws SampleAnalysisDuplicateException
 				sequencingObjectService.getUniqueSamplesForSequencingObjects(Sets.newHashSet(singleEndFiles));
 			}
-
+			List<Long> paired = parameters.getPaired();
 			if (paired != null) {
 				Iterable<SequencingObject> readMultiple = sequencingObjectService.readMultiple(paired);
 				
 				readMultiple.forEach(f -> {
-					if (f instanceof SingleEndSequenceFile) {
-						throw new IllegalArgumentException("file " + f.getId() + " not a single end file");
+					if (!(f instanceof SequenceFilePair)) {
+						throw new IllegalArgumentException("file " + f.getId() + " not a SequenceFilePair");
 					}
 					
 					sequenceFilePairs.add((SequenceFilePair) f);
@@ -400,12 +510,11 @@ public class PipelineController extends BaseController {
 			// Get the pipeline parameters
 			Map<String, String> params = new HashMap<>();
 			IridaWorkflowNamedParameters namedParameters = null;
-			if (parameters.containsKey("selectedParameters")) {
+			Map<String, Object> selectedParameters = parameters.getSelectedParameters();
+			if (selectedParameters != null) {
 				try {
-					final Map<String, Object> passedParameters = extractPipelineParameters(parameters
-							.get("selectedParameters"));
-					// we should only have *one* parameter set supplied.
-					final String selectedParametersId = passedParameters.get("id").toString();
+					final String selectedParametersId = selectedParameters.get("id")
+							.toString();
 					if (!DEFAULT_WORKFLOW_PARAMETERS_ID.equals(selectedParametersId)
 							&& !CUSTOM_UNSAVED_WORKFLOW_PARAMETERS_ID.equals(selectedParametersId)) {
 						// this means that a named parameter set was selected
@@ -413,42 +522,58 @@ public class PipelineController extends BaseController {
 						// to pass along.
 						namedParameters = namedParameterService.read(Long.valueOf(selectedParametersId));
 					} else {
-						@SuppressWarnings("unchecked")
-						final List<Map<String, String>> unnamedParameters = (List<Map<String, String>>) passedParameters.get("parameters");
+						@SuppressWarnings("unchecked") final List<Map<String, String>> unnamedParameters = (List<Map<String, String>>) selectedParameters.get(
+								"parameters");
 						for (final Map<String, String> parameter : unnamedParameters) {
 							params.put(parameter.get("name"), parameter.get("value"));
 						}
 					}
-				} catch (final IOException e) {
-					return ImmutableMap
-							.of("parameterError", messageSource.getMessage("pipeline.parameters.error", null, locale));
+				} catch (Exception e) {
+					return ImmutableMap.of("parameterError",
+							messageSource.getMessage("pipeline.parameters.error", null, locale));
 				}
 			}
-			
+
 			List<Project> projectsToShare = new ArrayList<>();
+			List<Long> sharedProjects = parameters.getSharedProjects();
 			if (sharedProjects != null && !sharedProjects.isEmpty()) {
 				projectsToShare = Lists.newArrayList(projectService.readMultiple(sharedProjects));
 			}
 
-			if (description.getInputs().requiresSingleSample()) {
+			String analysisDescription = parameters.getDescription();
+			Boolean writeResultsToSamples = parameters.getWriteResultsToSamples();
+			if (description.getInputs()
+					.requiresSingleSample()) {
 				analysisSubmissionService.createSingleSampleSubmission(flow, ref, singleEndFiles, sequenceFilePairs,
-						params, namedParameters, name, analysisDescription, projectsToShare);
+						params, namedParameters, name, analysisDescription, projectsToShare, writeResultsToSamples);
 			} else {
 				analysisSubmissionService.createMultipleSampleSubmission(flow, ref, singleEndFiles, sequenceFilePairs,
-						params, namedParameters, name, analysisDescription, projectsToShare);
+						params, namedParameters, name, analysisDescription, projectsToShare, writeResultsToSamples);
 			}
 
-		} catch (IridaWorkflowNotFoundException e) {
-			logger.error("Cannot file IridaWorkflow [" + pipelineId + "]", e);
-			result = ImmutableMap
-					.of("pipelineError", messageSource.getMessage("pipeline.error.invalid-pipeline", null, locale));
+		} catch (IridaWorkflowNotFoundException | IridaWorkflowNotDisplayableException e) {
+			logger.error("Cannot find or cannot launch IridaWorkflow [" + parameters.getWorkflowId() + "]", e);
+			return ImmutableMap.of("pipelineError",
+					messageSource.getMessage("pipeline.error.invalid-pipeline", null, locale));
 		} catch (DuplicateSampleException e) {
 			logger.error("Multiple files for Sample found", e);
-			result = ImmutableMap.of("pipelineError", messageSource.getMessage("pipeline.error.duplicate-samples",
-					null, locale));
+			return ImmutableMap.of("pipelineError",
+					messageSource.getMessage("pipeline.error.duplicate-samples", null, locale));
 		}
 
-		return result;
+		return ImmutableMap.of("success", true);
+	}
+
+	/**
+	 * Get {@link IridaWorkflowDescription} for a workflow/pipeline UUID.
+	 * @param pipelineUUID Workflow/Pipeline UUID
+	 * @return Map corresponding to a {@link IridaWorkflowDescription}.
+	 * @throws IridaWorkflowNotFoundException if workflow could not be found.
+	 */
+	@RequestMapping(value = "/ajax/{pipelineUUID}")
+	@ResponseBody
+	public IridaWorkflowDescription getPipelineInfo(@PathVariable UUID pipelineUUID) throws IridaWorkflowNotFoundException {
+		return workflowsService.getIridaWorkflowOrUnknown(pipelineUUID).getWorkflowDescription();
 	}
 	
 	/**

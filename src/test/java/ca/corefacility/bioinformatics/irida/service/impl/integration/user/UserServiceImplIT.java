@@ -1,9 +1,6 @@
 package ca.corefacility.bioinformatics.irida.service.impl.integration.user;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,11 +11,13 @@ import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
-import ca.corefacility.bioinformatics.irida.config.data.IridaApiJdbcDataSourceConfig;
+import ca.corefacility.bioinformatics.irida.exceptions.PasswordReusedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -42,6 +41,7 @@ import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import ca.corefacility.bioinformatics.irida.config.data.IridaApiJdbcDataSourceConfig;
 import ca.corefacility.bioinformatics.irida.config.services.IridaApiServicesConfig;
 import ca.corefacility.bioinformatics.irida.exceptions.EntityExistsException;
 import ca.corefacility.bioinformatics.irida.exceptions.EntityNotFoundException;
@@ -105,7 +105,7 @@ public class UserServiceImplIT {
 	@Test
 	@WithMockUser(username = "fbristow", roles = "MANAGER")
 	public void testCreateUserAsManagerSucceed() {
-		User u = new User("user", "user@user.us", "Password1", "User", "User", "7029");
+		User u = new User("user", "user@user.us", "Password1!", "User", "User", "7029");
 		u.setSystemRole(Role.ROLE_USER);
 		userService.create(u);
 	}
@@ -191,25 +191,35 @@ public class UserServiceImplIT {
 	@Test
 	@WithMockUser(username = "fbristow", roles = "MANAGER")
 	public void testUpdatePasswordWithCompleteLoginDetails() {
-		String updatedPassword = "NewPassword1";
+		String updatedPassword = "NewPassword1!";
 		User updated = userService.changePassword(1L, updatedPassword);
 		assertNotEquals("Password in user object should be encoded.", updated.getPassword(), updatedPassword);
 		assertTrue("Password is encoded correctly.", passwordEncoder.matches(updatedPassword, updated.getPassword()));
+	}
+
+	@Test(expected = PasswordReusedException.class)
+	@WithMockUser(username = "fbristow", roles = "MANAGER")
+	public void testUpdatePasswordWithExistingPassword() {
+		String updatedPassword = "Password1";
+		User updated = userService.changePassword(1L, updatedPassword);
 	}
 
 	@Test
 	public void testUpdatePasswordWithExpiredPassword() {
 		User u = new User();
 		u.setUsername("fbristow");
-		u.setPassword(passwordEncoder.encode("Password1"));
+		String encodedPassword = passwordEncoder.encode("Password1!");
+		System.out.println("testUpdatePasswordWithExpiredPassword");
+		System.out.println(encodedPassword);
+		u.setPassword(encodedPassword);
 		u.setSystemRole(Role.ROLE_MANAGER);
 		u.setCredentialsNonExpired(false);
-		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(u, "Password1",
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(u, "Password1!",
 				ImmutableList.of(Role.ROLE_MANAGER));
 		auth.setDetails(u);
 		auth.setAuthenticated(false);
 		SecurityContextHolder.getContext().setAuthentication(auth);
-		String updatedPassword = "NewPassword1";
+		String updatedPassword = "NewPassword1!";
 		User updated = userService.changePassword(1L, updatedPassword);
 		assertNotEquals("Password in user object should be encoded.", updated.getPassword(), updatedPassword);
 		assertTrue("User should not have expired credentials anymore.", updated.isCredentialsNonExpired());
@@ -220,13 +230,13 @@ public class UserServiceImplIT {
 	public void testUpdatePasswordWithAnonymousUser() {
 		SecurityContextHolder.getContext().setAuthentication(
 				new AnonymousAuthenticationToken("key", "anonymouse", ImmutableList.of(Role.ROLE_SEQUENCER)));
-		userService.changePassword(1L, "NewPassword1");
+		userService.changePassword(1L, "NewPassword1!");
 	}
 
 	@Test(expected = EntityExistsException.class)
 	@WithMockUser(username = "fbristow", roles = "MANAGER")
 	public void testCreateDuplicateEmail() {
-		User u = new User("user", "manager@nowhere.com", "Password1", "User", "User", "7029");
+		User u = new User("user", "manager@nowhere.com", "Password1!", "User", "User", "7029");
 		u.setSystemRole(Role.ROLE_USER);
 		userService.create(u);
 	}
@@ -234,7 +244,7 @@ public class UserServiceImplIT {
 	@Test(expected = EntityExistsException.class)
 	@WithMockUser(username = "fbristow", roles = "MANAGER")
 	public void testCreateDuplicateUsername() {
-		User u = new User("fbristow", "distinct@nowhere.com", "Password1", "User", "User", "7029");
+		User u = new User("fbristow", "distinct@nowhere.com", "Password1!", "User", "User", "7029");
 		u.setSystemRole(Role.ROLE_USER);
 		userService.create(u);
 	}
@@ -314,7 +324,7 @@ public class UserServiceImplIT {
 			fail();
 		} catch (ConstraintViolationException e) {
 			Set<ConstraintViolation<?>> violationSet = e.getConstraintViolations();
-			assertEquals(1, violationSet.size());
+			assertEquals(2, violationSet.size());
 			ConstraintViolation<?> violation = violationSet.iterator().next();
 			assertTrue(violation.getPropertyPath().toString().contains("password"));
 		} catch (Exception e) {
@@ -349,14 +359,14 @@ public class UserServiceImplIT {
 	@WithMockUser(username = "admin", roles = "ADMIN")
 	public void testSearchUser(){
 		String search = "Mr";
-		Page<User> searchUser = userService.search(UserSpecification.searchUser(search), 0, 10, Direction.ASC, "id");
+		Page<User> searchUser = userService.search(UserSpecification.searchUser(search), new PageRequest(0, 10, new Sort(Direction.ASC, "id")));
 		assertEquals(3,searchUser.getContent().size());
 		for(User u : searchUser){
 			assertTrue(u.getFirstName().contains("Mr"));
 		}
 		
 		search = "User";
-		searchUser = userService.search(UserSpecification.searchUser(search), 0, 10, Direction.ASC, "id");
+		searchUser = userService.search(UserSpecification.searchUser(search), new PageRequest(0, 10, new Sort(Direction.ASC, "id")));
 		assertEquals(2,searchUser.getContent().size());
 	}
 

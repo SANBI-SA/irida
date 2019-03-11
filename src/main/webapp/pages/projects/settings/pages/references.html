@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorator="projects/settings/_base">
+      data-layout-decorate="~{projects/settings/_base}">
 <head>
     <title th:text="#{project.settings.page.title.references}">Title</title>
     <script th:inline="javascript">
-      window.dependencies = ['References'];
       var PAGE = {
         urls: {
           get: /*[[@{/projects/{id}/settings/ajax/reference/all(id=${project.identifier})}]]*/ '/projects/1/ajax/reference/all',
@@ -13,13 +12,13 @@
           upload: /*[[@{/referenceFiles/project/{id}/new(id=${project.identifier})}]]*/ 'referenceFiles/project/1/new'
         },
         templates: {
-          deleteFile: /*[[@{/projects/templates/referenceFiles/delete'}]]*/ '/projects/templates/referenceFiles/delete'
+          deleteFile: /*[[@{/projects/templates/referenceFiles/delete}]]*/ '/projects/templates/referenceFiles/delete'
         }
       };
     </script>
 </head>
 <body>
-<div layout:fragment="settings-content" ddl:bundle-includes="project-reference-files" th:with="owner=(${isOwner} or ${isAdmin})">
+<div layout:fragment="settings-content" th:with="owner=(${isOwner} or ${isAdmin})">
     <div class="row">
         <div class="col-md-12 clearfix">
 				<span class="pull-right" th:if="${owner}" ng-controller="FileUploadCtrl as upload">
@@ -45,7 +44,7 @@
             <file-upload-progress></file-upload-progress>
         </div>
         <section id="rf-files" class="col-md-12" ng-show="table.files.length > 0">
-            <table id="files-table" class="table">
+            <table id="files-table" class="table table-striped">
                 <thead>
                 <tr>
                     <th th:text="#{projects.reference-file.name}">Name</th>
@@ -61,9 +60,12 @@
                     <td>{{file.createdDate | date:'mediumDate'}}</td>
                     <td>
                         <div class="btn-toolbar pull-right">
-                            <button ng-show="file.size > 0" class="btn btn-xs btn-default" ng-click="table.download(file.id)" data:uib-tooltip="#{form.download}">
+                            <a ng-show="file.size > 0" class="btn btn-xs btn-default" download="{{file.id}}"
+                               th:with="url=@{/referenceFiles/download/}"
+                               data:ng-href="${url} + '{{file.id}}'"
+                               data:uib-tooltip="#{form.download}">
                                 <span class="fa fa-fw fa-download"></span> <span class="sr-only" th:text="#{form.download}"></span>
-                            </button>
+                            </a>
                             <button th:if="${isOwner} or ${isAdmin}" class="btn btn-xs btn-default removeBtn" ng-click="table.deleteFile(file)" data:uib-tooltip="#{form.btn.remove}">
                                 <span class="fa fa-fw fa-trash"></span> <span class="sr-only" th:text="#{form.btn.remove}"></span>
                             </button>
@@ -73,6 +75,7 @@
                 </tbody>
             </table>
         </section>
+
     </div>
 </div>
 <th:block layout:fragment="scripts"  th:inline="javascript">
@@ -100,6 +103,7 @@
             </div>
         </div>
     </script>
+    <script th:src="@{/resources/dist/js/project-reference-files.bundle.js}"></script>
 </th:block>
 </body>
 </html>

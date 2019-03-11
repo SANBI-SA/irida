@@ -11,20 +11,24 @@ import java.security.Principal;
 import java.util.Locale;
 import java.util.UUID;
 
+import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyToolDataService;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.ui.ExtendedModelMap;
 
+import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotDisplayableException;
 import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotFoundException;
 import ca.corefacility.bioinformatics.irida.model.enums.ProjectRole;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.sample.Sample;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.user.User;
+import ca.corefacility.bioinformatics.irida.pipeline.results.AnalysisSubmissionSampleProcessor;
 import ca.corefacility.bioinformatics.irida.ria.unit.TestDataFactory;
 import ca.corefacility.bioinformatics.irida.ria.web.analysis.CartController;
 import ca.corefacility.bioinformatics.irida.ria.web.pipelines.PipelineController;
+import ca.corefacility.bioinformatics.irida.security.permissions.sample.UpdateSamplePermission;
 import ca.corefacility.bioinformatics.irida.service.AnalysisSubmissionService;
 import ca.corefacility.bioinformatics.irida.service.ProjectService;
 import ca.corefacility.bioinformatics.irida.service.ReferenceFileService;
@@ -51,6 +55,10 @@ public class PipelineControllerTest {
 	// Controller to test
 	private PipelineController controller;
 	private WorkflowNamedParametersService namedParameterService;
+	private UpdateSamplePermission updateSamplePermission;
+	private AnalysisSubmissionSampleProcessor analysisSubmissionSampleProcessor;
+	private GalaxyToolDataService galaxyToolDataService;
+	private String iridaPipelinePluginStyle = "";
 
 	@Before
 	public void setUp() {
@@ -63,9 +71,14 @@ public class PipelineControllerTest {
 		cartController = mock(CartController.class);
 		sequencingObjectService = mock(SequencingObjectService.class);
 		namedParameterService = mock(WorkflowNamedParametersService.class);
+		updateSamplePermission = mock(UpdateSamplePermission.class);
+		analysisSubmissionSampleProcessor = mock(AnalysisSubmissionSampleProcessor.class);
+		galaxyToolDataService = mock(GalaxyToolDataService.class);
+		
 
 		controller = new PipelineController(sequencingObjectService, referenceFileService, analysisSubmissionService,
-				workflowsService, projectService, userService, cartController, messageSource, namedParameterService);
+				workflowsService, projectService, userService, cartController, messageSource, namedParameterService,
+				updateSamplePermission, analysisSubmissionSampleProcessor, galaxyToolDataService, iridaPipelinePluginStyle);
 		when(messageSource.getMessage(any(), any(), any())).thenReturn("");
 	}
 
@@ -89,7 +102,7 @@ public class PipelineControllerTest {
 	}
 
 	@Test
-	public void testGetPhylogenomicsPageWithCart() throws IridaWorkflowNotFoundException {
+	public void testGetPhylogenomicsPageWithCart() throws IridaWorkflowNotFoundException, IridaWorkflowNotDisplayableException {
 		ExtendedModelMap model = new ExtendedModelMap();
 		String username = "FRED";
 		Principal principal = () -> username;
@@ -103,7 +116,7 @@ public class PipelineControllerTest {
 		when(sequencingObjectService.getSequencesForSampleOfType(any(Sample.class), eq(SingleEndSequenceFile.class)))
 				.thenReturn(TestDataFactory.generateSequencingObjectsForSample(TestDataFactory.constructSample()));
 
-		when(workflowsService.getIridaWorkflow(id)).thenReturn(TestDataFactory.getIridaWorkflow(id));
+		when(workflowsService.getDisplayableIridaWorkflow(id)).thenReturn(TestDataFactory.getIridaWorkflow(id));
 		String response = controller.getSpecifiedPipelinePage(model, principal, Locale.US, id);
 		assertEquals("Response should be the path to the phylogenomics template",
 				PipelineController.URL_GENERIC_PIPELINE, response);

@@ -2,54 +2,43 @@ package ca.corefacility.bioinformatics.irida.ria.web.projects.metadata;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-import ca.corefacility.bioinformatics.irida.model.joins.Join;
 import ca.corefacility.bioinformatics.irida.model.joins.impl.ProjectMetadataTemplateJoin;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.sample.MetadataTemplate;
 import ca.corefacility.bioinformatics.irida.model.sample.MetadataTemplateField;
-import ca.corefacility.bioinformatics.irida.model.sample.Sample;
-import ca.corefacility.bioinformatics.irida.model.sample.metadata.MetadataEntry;
 import ca.corefacility.bioinformatics.irida.ria.web.projects.ProjectControllerUtils;
 import ca.corefacility.bioinformatics.irida.service.ProjectService;
 import ca.corefacility.bioinformatics.irida.service.sample.MetadataTemplateService;
-import ca.corefacility.bioinformatics.irida.service.sample.SampleService;
 
 import com.google.common.collect.ImmutableMap;
 
+/**
+ * Handles requests for the metadata in a project
+ */
 @Controller
 @RequestMapping("/projects/{projectId}/linelist")
 public class ProjectLineListController {
+	
 	private final ProjectService projectService;
-	private final SampleService sampleService;
 	private final MetadataTemplateService metadataTemplateService;
 	private final ProjectControllerUtils projectControllerUtils;
 	private final MessageSource messageSource;
 
 	@Autowired
-	public ProjectLineListController(ProjectService projectService, SampleService sampleService,
-			MetadataTemplateService metadataTemplateService, ProjectControllerUtils utils, MessageSource messageSource) {
+	public ProjectLineListController(ProjectService projectService, MetadataTemplateService metadataTemplateService,
+			ProjectControllerUtils utils, MessageSource messageSource) {
 		this.projectService = projectService;
-		this.sampleService = sampleService;
 		this.metadataTemplateService = metadataTemplateService;
 		this.projectControllerUtils = utils;
 		this.messageSource = messageSource;
@@ -64,8 +53,6 @@ public class ProjectLineListController {
 	 * 		{@link Long} id for the current template
 	 * @param model
 	 * 		{@link Model}
-	 * @param locale
-	 * 		{@link Locale}
 	 * @param principal
 	 * 		{@link Principal} currently logged in user.
 	 *
@@ -73,7 +60,7 @@ public class ProjectLineListController {
 	 */
 	@RequestMapping("")
 	public String getLineListPage(@PathVariable Long projectId, @RequestParam(required = false) Long templateId,
-			Model model, Locale locale, Principal principal) {
+			Model model, Principal principal) {
 		// Set up the template information
 		Project project = projectService.read(projectId);
 		projectControllerUtils.getProjectTemplateDetails(model, principal, project);
@@ -85,42 +72,6 @@ public class ProjectLineListController {
 			model.addAttribute("currentTemplate", templateId);
 		}
 
-		// Get the headers (metadata fields)
-		List<String> headers = getAllProjectMetadataFields(projectId);
-		model.addAttribute("headers", headers);
-
-		// Get all the metadata for each sample in the project
-		List<Join<Project, Sample>> samplesForProject = sampleService.getSamplesForProject(project);
-		List<Map<String, Object>> metadataList = new ArrayList<>(samplesForProject.size());
-		for (Join<Project, Sample> join : samplesForProject) {
-			Sample sample = join.getObject();
-			Map<String, Object> fullMetadata = new HashMap<>();
-			if (!sample.getMetadata().isEmpty()) {
-				Map<MetadataTemplateField, MetadataEntry> metadata = sample.getMetadata();
-				
-				Map<String,MetadataEntry> stringMetadata = new HashMap<>();
-				metadata.forEach((key, value) -> stringMetadata.put(key.getLabel(), value));
-				
-				for (String header : headers) {
-					/*
-					Since the id and the label are kept on the Sample not in the JSON,
-					They need to be pulled specifically from the sample.
-					 */
-					if (header.equalsIgnoreCase("id")) {
-						fullMetadata.put("id", ImmutableMap.of("value", sample.getId()));
-					} else if (header.equalsIgnoreCase("label")) {
-						fullMetadata.put("label", ImmutableMap.of("value", sample.getSampleName()));
-					} else {
-						fullMetadata.put(header, stringMetadata.getOrDefault(header, new MetadataEntry("", "")));
-					}
-				}
-
-				// Put this here to avoid showing samples that do not have
-				// any metadata associated with them.
-				metadataList.add(fullMetadata);
-			}
-		}
-		model.addAttribute("metadataList", metadataList);
 		return "projects/project_linelist";
 	}
 
@@ -166,11 +117,9 @@ public class ProjectLineListController {
 	/**
 	 * Save a new line list template.
 	 *
-	 * @param projectId
-	 * 		{@link Long} id for the current project
-	 * @param templateName
-	 * 		{@link String} name for the new template
-	 *
+	 * @param projectId    {@link Long} id for the current project
+	 * @param templateName {@link String} name for the new template
+	 * @param fields       The fields to save to the template
 	 * @return The result of saving.
 	 */
 	@RequestMapping(value = "/linelist-templates/save-template/{templateName}",
@@ -208,49 +157,6 @@ public class ProjectLineListController {
 	}
 
 	/**
-	 * Get the template the the line list table.  This becomes the table headers.
-	 *
-	 * @param projectId
-	 * 		{@link Long} identifier of the current {@link Project}
-	 *
-	 * @return {@link Set} containing unique metadata fields
-	 */
-	private List<String> getAllProjectMetadataFields(Long projectId) {
-		Project project = projectService.read(projectId);
-		Set<String> fields = new HashSet<>();
-
-		// Get all the fields from the metadata
-		List<Join<Project, Sample>> samplesForProject = sampleService.getSamplesForProject(project);
-		for (Join<Project, Sample> join : samplesForProject) {
-			Sample sample = join.getObject();
-			if (! sample.getMetadata().isEmpty()) {
-				Map<MetadataTemplateField, MetadataEntry> metadataFields = sample.getMetadata();
-				
-				//add the template keys to the field list
-				fields.addAll(metadataFields.keySet().stream().map(MetadataTemplateField::getLabel)
-						.collect(Collectors.toSet()));
-			}
-		}
-
-		// Get all the fields from the templates.
-		List<ProjectMetadataTemplateJoin> metadataTemplateJoins = metadataTemplateService
-				.getMetadataTemplatesForProject(project);
-		for (ProjectMetadataTemplateJoin join : metadataTemplateJoins) {
-			MetadataTemplate template = join.getObject();
-			fields.addAll(template.getFields().stream().map(MetadataTemplateField::getLabel)
-					.collect(Collectors.toSet()));
-		}
-
-		List<String> fieldList = new ArrayList<>(fields);
-
-		// Need to add default sample fields.
-		fieldList.add(0, "label");
-		fieldList.add(0, "id");
-
-		return fieldList;
-	}
-
-	/**
 	 * Get a {@link List} of {@link MetadataTemplate}s for a specific {@link Project}
 	 *
 	 * @param projectId
@@ -276,25 +182,21 @@ public class ProjectLineListController {
 	/**
 	 * Save a list a {@link MetadataTemplateField} as a {@link MetadataTemplate}
 	 *
-	 * @param projectId
-	 * 		identifier for the current {@link Project}
-	 * @param fields
-	 * 		{@link List} of {@link String} names of {@link MetadataTemplateField}
-	 * @param name
-	 * 		{@link String} name for the new template.
-	 *
-	 * @return
+	 * @param projectId  identifier for the current {@link Project}
+	 * @param fields     {@link List} of {@link String} names of {@link MetadataTemplateField}
+	 * @param name       {@link String} name for the new template.
+	 * @param templateId ID of the template to update.  Will create new template if null
+	 * @param locale     Locale of teh logged in user
+	 * @return the saved {@link MetadataTemplate} and a response message
 	 */
-	@RequestMapping(
-			value = "/templates",
-			method = RequestMethod.POST
-	)
+	@RequestMapping(value = "/templates", method = RequestMethod.POST)
 	@ResponseBody
 	public Map<String, Object> saveMetadataTemplate(@PathVariable long projectId, @RequestParam String name,
 			@RequestParam(value = "fields[]") List<String> fields, @RequestParam(required = false) Long templateId, Locale locale) {
 		Project project = projectService.read(projectId);
 
 		List<MetadataTemplateField> metadataFields = new ArrayList<>();
+
 		for (String label : fields) {
 			// Check to see if this field already exists.
 			MetadataTemplateField metadataField = metadataTemplateService.readMetadataFieldByLabel(label);

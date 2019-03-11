@@ -10,8 +10,10 @@ import org.springframework.data.domain.Sort.Direction;
 
 import ca.corefacility.bioinformatics.irida.exceptions.EntityNotFoundException;
 import ca.corefacility.bioinformatics.irida.exceptions.SequenceFileAnalysisException;
+import ca.corefacility.bioinformatics.irida.model.assembly.GenomeAssembly;
 import ca.corefacility.bioinformatics.irida.model.joins.Join;
 import ca.corefacility.bioinformatics.irida.model.joins.impl.ProjectSampleJoin;
+import ca.corefacility.bioinformatics.irida.model.joins.impl.SampleGenomeAssemblyJoin;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.project.ReferenceFile;
 import ca.corefacility.bioinformatics.irida.model.sample.QCEntry;
@@ -39,12 +41,12 @@ public interface SampleService extends CRUDService<Long, Sample> {
 	 *            the {@link Project} to get the {@link Sample} for.
 	 * @param identifier
 	 *            the identifier of the {@link Sample}
-	 * @return the {@link Sample} as requested
+	 * @return the {@link ProjectSampleJoin} describing the relationship between projet and sample
 	 * @throws EntityNotFoundException
 	 *             if no relationship exists between {@link Sample} and
 	 *             {@link Project}.
 	 */
-	public Sample getSampleForProject(Project project, Long identifier) throws EntityNotFoundException;
+	public ProjectSampleJoin getSampleForProject(Project project, Long identifier) throws EntityNotFoundException;
 	
 	/**
 	 * Find a {@link Sample} assocaited with a {@link SequencingObject}
@@ -64,7 +66,24 @@ public interface SampleService extends CRUDService<Long, Sample> {
 	 * @return the collection of samples for the {@link Project}.
 	 */
 	public List<Join<Project, Sample>> getSamplesForProject(Project project);
-	
+
+	/**
+	 * Get a shallow listing of the {@link Sample}s in a {@link Project}.  Note: This method will not return any
+	 * metadata or associated objects.
+	 *
+	 * @param project The {@link Project} to get samples for
+	 * @return a List of {@link Sample}
+	 */
+	public List<Sample> getSamplesForProjectShallow(Project project);
+
+	/**
+	 * Get a list of {@link Sample} in a {@link Project} given some Sample ids.
+	 * @param project {@link Project} to get samples for.
+	 * @param sampleIds List of {@link Sample} ids.
+	 * @return List of Samples from a {@link Project}.
+	 */
+	List<Sample> getSamplesInProject(Project project, List<Long> sampleIds);
+		
 	/**
 	 * Get a list of the organism fields stored for all {@link Sample}s in a
 	 * {@link Project}
@@ -145,7 +164,7 @@ public interface SampleService extends CRUDService<Long, Sample> {
 	 * @return the completely merged {@link Sample} (the persisted version of
 	 *         <code>mergeInto</code>).
 	 */
-	public Sample mergeSamples(Project p, Sample mergeInto, Sample... toMerge);
+	public Sample mergeSamples(Project p, Sample mergeInto, Collection<Sample> toMerge);
 
 	/**
 	 * Given a sample gets the total number of bases in all sequence files in
@@ -233,7 +252,7 @@ public interface SampleService extends CRUDService<Long, Sample> {
 	 *            the {@link AnalysisSubmission}
 	 * @return a Collection of {@link Sample}
 	 */
-	public Collection<Sample> getSamplesForAnalysisSubimssion(AnalysisSubmission submission);
+	public Collection<Sample> getSamplesForAnalysisSubmission(AnalysisSubmission submission);
 	
 	/**
 	 * Find all the {@link QCEntry} associated with {@link SequencingObject}s in
@@ -245,4 +264,67 @@ public interface SampleService extends CRUDService<Long, Sample> {
 	 */
 	public List<QCEntry> getQCEntriesForSample(Sample sample);
 
+	/**
+	 * Gets a collection of {@link SampleGenomeAssemblyJoin}s for the given
+	 * sample.
+	 * 
+	 * @param sample
+	 *            The sample.
+	 * @return A collection of joins to {@link GenomeAssembly}s for the sample.
+	 */
+	public Collection<SampleGenomeAssemblyJoin> getAssembliesForSample(Sample sample);
+	
+	/**
+	 * Gets the genome assembly for a sample.
+	 * 
+	 * @param sample
+	 *            The sample.
+	 * @param genomeAssemblyId
+	 *            The id of the genome assembly.
+	 * @return The {@link GenomeAssembly} with the given information.
+	 */
+	public GenomeAssembly getGenomeAssemblyForSample(Sample sample, Long genomeAssemblyId);
+
+	/**
+	 * Deletes the given genome assembly from the given sample.
+	 * 
+	 * @param sample
+	 *            The sample.
+	 * @param genomeAssemblyId
+	 *            The genome assembly.
+	 */
+	public void removeGenomeAssemblyFromSample(Sample sample, Long genomeAssemblyId);
+
+	/**
+	 * Search all {@link Sample}s in projects the current logged in user has
+	 * access to
+	 * 
+	 * @param query
+	 *            the query string to search
+	 * @param page
+	 *            which page to return
+	 * @param count
+	 *            the number of entities to return
+	 * @param sort
+	 *            how to sort the result
+	 * @return a page of {@link ProjectSampleJoin}
+	 */
+	public Page<ProjectSampleJoin> searchSamplesForUser(String query, final Integer page, final Integer count,
+			final Sort sort);
+
+	/**
+	 * Search all {@link Sample}s in the database on the given query
+	 * 
+	 * @param query
+	 *            the query string to search
+	 * @param page
+	 *            which page to return
+	 * @param count
+	 *            the number of entities to return
+	 * @param sort
+	 *            how to sort the result
+	 * @return a page of {@link ProjectSampleJoin}
+	 */
+	public Page<ProjectSampleJoin> searchAllSamples(String query, final Integer page, final Integer count,
+			final Sort sort);
 }

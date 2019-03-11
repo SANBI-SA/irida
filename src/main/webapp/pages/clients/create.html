@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorator="clients/_base">
+      data-layout-decorate="~{clients/_base}">
 <head>
     <title th:text="#{client.create}">_Create Client_</title>
     <style>
@@ -17,9 +17,9 @@
     </script>
 </head>
 <body>
-<main layout:fragment="page" ddl:bundle-includes="client_create">
+<main layout:fragment="page">
     <div class="row">
-        <div class="col-md-8 col-md-offset-2 mrgn-tp-lg wb-frmvld">
+        <div class="col-md-6 col-md-offset-3">
             <form role="form" action="/clients/create"
                   th:action="@{/clients/create}" method="post">
                 <section class="panel panel-default">
@@ -135,5 +135,8 @@
         </div>
     </div>
 </main>
+<th:block layout:fragment="page-scripts">
+    <script th:src="@{/resources/js/pages/clients/client_create.js}"></script>
+</th:block>
 </body>
 </html>

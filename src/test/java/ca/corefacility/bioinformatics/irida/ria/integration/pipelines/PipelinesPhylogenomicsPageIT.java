@@ -4,8 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +15,7 @@ import ca.corefacility.bioinformatics.irida.ria.integration.AbstractIridaUIITChr
 import ca.corefacility.bioinformatics.irida.ria.integration.pages.LoginPage;
 import ca.corefacility.bioinformatics.irida.ria.integration.pages.pipelines.PipelinesPhylogenomicsPage;
 import ca.corefacility.bioinformatics.irida.ria.integration.pages.pipelines.PipelinesSelectionPage;
-import ca.corefacility.bioinformatics.irida.ria.integration.pages.projects.AssociatedProjectEditPage;
 import ca.corefacility.bioinformatics.irida.ria.integration.pages.projects.ProjectSamplesPage;
-import ca.corefacility.bioinformatics.irida.ria.integration.utilities.RemoteApiUtilities;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 
@@ -32,11 +31,10 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 	private PipelinesPhylogenomicsPage page;
 
 	@Before
-	public void setUpTest() {
+	public void setUpTest() throws IOException {
 		page = new PipelinesPhylogenomicsPage(driver());
 	}
 
-	@Ignore
 	@Test
 	public void testPageSetup() {
 		addSamplesToCart();
@@ -47,25 +45,23 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 		assertEquals("Should display the correct number of samples.", 2, page.getNumberOfSamplesDisplayed());
 	}
 
-	@Ignore
 	@Test
-	public void testSubmitWithTransientReferenceFile() {
+	public void testSubmitWithTransientReferenceFile() throws IOException {
 		LoginPage.loginAsUser(driver());
 
 		// Add sample from a project that user is a "Project User" and has no
 		// reference files.
 		ProjectSamplesPage samplesPage = ProjectSamplesPage.gotToPage(driver(), 2);
-		samplesPage.selectSample(1);
+		samplesPage.selectSample(0);
 		samplesPage.addSelectedSamplesToCart();
 
 		PipelinesSelectionPage.goToPhylogenomicsPipeline(driver());
 		assertTrue("Should display a warning to the user that there are no reference files.",
 				page.isNoReferenceWarningDisplayed());
-		page.selectReferenceFile();
-		assertTrue("Page should display reference file name.", page.isReferenceFileNameDisplayed());
+		String fileName = page.selectReferenceFile();
+		assertTrue("Page should display reference file name.", page.isReferenceFileNameDisplayed(fileName));
 	}
 
-	@Ignore
 	@Test
 	public void testPipelineSubmission() {
 		addSamplesToCart();
@@ -76,7 +72,6 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 				page.isPipelineSubmittedSuccessMessageShown());
 	}
 
-	@Ignore
 	@Test
 	public void testCheckPipelineStatusAfterSubmit() {
 		addSamplesToCart();
@@ -89,7 +84,6 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 		assertTrue("Should be on analysis page", driver().getCurrentUrl().endsWith("/analysis"));
 	}
 
-	@Ignore
 	@Test
 	public void testClearPipelineAndGetSamples() {
 		addSamplesToCart();
@@ -103,7 +97,6 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 		assertFalse("cart should be empty", page.isCartCountVisible());
 	}
 
-	@Ignore
 	@Test
 	public void testRemoveSample() {
 		addSamplesToCart();
@@ -117,7 +110,6 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 		assertEquals("cart samples count should equal samples on page", laterNumber, page.getCartCount());
 	}
 
-	@Ignore
 	@Test
 	public void testRemoveAllSample() {
 		addSamplesToCart();
@@ -128,7 +120,6 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 		assertTrue("user should be redirected to pipelinese page", driver().getCurrentUrl().endsWith("/pipelines"));
 	}
 
-	@Ignore
 	@Test
 	public void testModifyParameters() {
 		addSamplesToCart();
@@ -136,17 +127,16 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 		assertEquals("Should have the proper pipeline name in title", "Default Parameters",
 				page.getParametersModalTitle());
 
-		// set the value for the ALternative Allele Fraction
-		String value = page.getAlternativeAlleleFractionValue();
+		// set the value
+		String value = page.getSNVAbundanceRatio();
 		String newValue = "10";
-		page.setAlternativeAlleleFraction(newValue);
+		page.setSNVAbundanceRatio(newValue);
 		assertEquals("Should not have the same value as the default after being changed", newValue,
-				page.getAlternativeAlleleFractionValue());
-		page.clickSetDefaultAlternativeAlleleFraction();
-		assertEquals("Value should be reset to the default value", value, page.getAlternativeAlleleFractionValue());
+				page.getSNVAbundanceRatio());
+		page.clickSetDefaultSNVAbundanceRatio();
+		assertEquals("Value should be reset to the default value", value, page.getSNVAbundanceRatio());
 	}
 
-	@Ignore
 	@Test
 	public void testModifyParametersAgain() throws InterruptedException {
 		addSamplesToCart();
@@ -156,19 +146,18 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 
 		// set the value for the ALternative Allele Fraction
 		String newValue = "10";
-		page.setAlternativeAlleleFraction(newValue);
-		assertEquals("Should be set to the new value.", newValue, page.getAlternativeAlleleFractionValue());
+		page.setSNVAbundanceRatio(newValue);
+		assertEquals("Should be set to the new value.", newValue, page.getSNVAbundanceRatio());
 
 		page.clickUseParametersButton();
 
 		// open the dialog again and make sure that the changed values are still
 		// there:
 		page.clickPipelineParametersBtn();
-		assertEquals("alternative allele fraction should have the same value as the new value after being changed",
-				newValue, page.getAlternativeAlleleFractionValue());
+		assertEquals("snv abundance ratio should have the same value as the new value after being changed",
+				newValue, page.getSNVAbundanceRatio());
 	}
 
-	@Ignore
 	@Test
 	public void testModifyAndSaveParameters() {
 		addSamplesToCart();
@@ -179,9 +168,9 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 		// set the value for the ALternative Allele Fraction
 		String newValue = "10";
 		final String savedParametersName = "Saved parameters name.";
-		page.setAlternativeAlleleFraction(newValue);
-		assertEquals("Should have updated alternative allele fractiion value to new value.", newValue,
-				page.getAlternativeAlleleFractionValue());
+		page.setSNVAbundanceRatio(newValue);
+		assertEquals("Should have updated snv abundance ratio value to new value.", newValue,
+				page.getSNVAbundanceRatio());
 		page.clickSaveParameters();
 		assertTrue("Page should have shown name for parameters field with selected parameters name.",
 				page.isNameForParametersVisible());
@@ -191,40 +180,6 @@ public class PipelinesPhylogenomicsPageIT extends AbstractIridaUIITChromeDriver 
 				page.getSelectedParameterSet());
 		// now test that we can run the pipeline
 		page.clickLaunchPipelineBtn();
-		assertTrue("Message should be displayed once the pipeline finished submitting",
-				page.isPipelineSubmittedSuccessMessageShown());
-	}
-
-	@Test
-	@Ignore
-	public void testRemoteSample() throws InterruptedException{
-		LoginPage.loginAsAdmin(driver());
-		// add the api
-		RemoteApiUtilities.addRemoteApi(driver());
-
-		// associate a project from that api
-		AssociatedProjectEditPage apEditPage = new AssociatedProjectEditPage(driver());
-		apEditPage.goTo(1L);
-		apEditPage.viewRemoteTab();
-		apEditPage.clickAssociatedButton(1L);
-		assertTrue(apEditPage.checkNotyStatus("success"));
-
-		ProjectSamplesPage samplesPage = ProjectSamplesPage.gotToPage(driver(), 1);
-
-		samplesPage.selectSample(0);
-		samplesPage.addSelectedSamplesToCart();
-		
-//		samplesPage.enableRemoteProjects();
-//
-//		samplesPage.selectSampleByClass("remote-sample");
-//		samplesPage.addSamplesToGlobalCart();
-		
-		PipelinesSelectionPage.goToPhylogenomicsPipeline(driver());
-		
-		assertTrue(page.isRemoteSampleDisplayed());
-
-		page.clickLaunchPipelineBtn();
-		assertTrue("Message should be displayed when the pipeline is submitted", page.isPipelineSubmittedMessageShown());
 		assertTrue("Message should be displayed once the pipeline finished submitting",
 				page.isPipelineSubmittedSuccessMessageShown());
 	}

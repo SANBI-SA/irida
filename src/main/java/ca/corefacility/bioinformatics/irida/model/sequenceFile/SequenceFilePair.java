@@ -33,6 +33,9 @@ import com.google.common.collect.Lists;
 import ca.corefacility.bioinformatics.irida.model.irida.IridaSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.irida.IridaSequenceFilePair;
 
+/**
+ * A pair of sequence files in forward/reverse orientation.
+ */
 @Entity
 @Table(name = "sequence_file_pair")
 @EntityListeners(AuditingEntityListener.class)
@@ -65,7 +68,7 @@ public class SequenceFilePair extends SequencingObject implements IridaSequenceF
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(files);
+		return Objects.hash(getFiles());
 	}
 
 	@Override
@@ -73,7 +76,7 @@ public class SequenceFilePair extends SequencingObject implements IridaSequenceF
 		if (obj instanceof SequenceFilePair) {
 			SequenceFilePair pair = (SequenceFilePair) obj;
 
-			return super.equals(obj) && Objects.equals(files, pair.files);
+			return super.equals(obj) && Objects.equals(getFiles(), pair.getFiles());
 		}
 
 		return false;
@@ -139,6 +142,7 @@ public class SequenceFilePair extends SequencingObject implements IridaSequenceF
 		return builder.toString();
 	}
 
+	@Override
 	public Set<SequenceFile> getFiles() {
 		// returning an ImmutableSet to ensure it isn't changed
 		return ImmutableSet.copyOf(files);

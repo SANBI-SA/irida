@@ -1,24 +1,6 @@
 package ca.corefacility.bioinformatics.irida.service.analysis.execution.galaxy;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.io.IOException;
-import java.util.concurrent.Future;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
-import org.springframework.transaction.annotation.Transactional;
-
-import ca.corefacility.bioinformatics.irida.exceptions.AnalysisAlreadySetException;
-import ca.corefacility.bioinformatics.irida.exceptions.EntityNotFoundException;
-import ca.corefacility.bioinformatics.irida.exceptions.ExecutionManagerException;
-import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowAnalysisTypeException;
-import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowException;
-import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotFoundException;
+import ca.corefacility.bioinformatics.irida.exceptions.*;
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisState;
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.Analysis;
@@ -26,12 +8,25 @@ import ca.corefacility.bioinformatics.irida.model.workflow.execution.galaxy.Prep
 import ca.corefacility.bioinformatics.irida.model.workflow.execution.galaxy.WorkflowInputsGalaxy;
 import ca.corefacility.bioinformatics.irida.model.workflow.structure.IridaWorkflowStructure;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
+import ca.corefacility.bioinformatics.irida.pipeline.results.AnalysisSubmissionSampleProcessor;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyWorkflowService;
 import ca.corefacility.bioinformatics.irida.service.AnalysisService;
 import ca.corefacility.bioinformatics.irida.service.AnalysisSubmissionService;
 import ca.corefacility.bioinformatics.irida.service.analysis.annotations.RunAsUser;
 import ca.corefacility.bioinformatics.irida.service.analysis.workspace.galaxy.AnalysisWorkspaceServiceGalaxy;
 import ca.corefacility.bioinformatics.irida.service.workflow.IridaWorkflowsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
+import java.util.concurrent.Future;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Service for executing {@link AnalysisSubmission} stages within a Galaxy
@@ -48,6 +43,7 @@ public class AnalysisExecutionServiceGalaxyAsync {
 	private final AnalysisWorkspaceServiceGalaxy workspaceService;
 	private final GalaxyWorkflowService galaxyWorkflowService;
 	private final IridaWorkflowsService iridaWorkflowsService;
+	private final AnalysisSubmissionSampleProcessor analysisSubmissionSampleProcessor;
 
 	/**
 	 * Builds a new {@link AnalysisExecutionServiceGalaxyAsync} with the given
@@ -63,16 +59,21 @@ public class AnalysisExecutionServiceGalaxyAsync {
 	 *            A service for a workflow workspace.
 	 * @param iridaWorkflowsService
 	 *            A service for loading up {@link IridaWorkflow}s.
+	 * @param analysisSubmissionSampleService
+	 *            A service to updating samples associated with a submission
+	 *            with the analysis results.
 	 */
 	@Autowired
 	public AnalysisExecutionServiceGalaxyAsync(AnalysisSubmissionService analysisSubmissionService,
 			AnalysisService analysisService, GalaxyWorkflowService galaxyWorkflowService,
-			AnalysisWorkspaceServiceGalaxy workspaceService, IridaWorkflowsService iridaWorkflowsService) {
+			AnalysisWorkspaceServiceGalaxy workspaceService, IridaWorkflowsService iridaWorkflowsService,
+			AnalysisSubmissionSampleProcessor analysisSubmissionSampleService) {
 		this.analysisSubmissionService = analysisSubmissionService;
 		this.analysisService = analysisService;
 		this.galaxyWorkflowService = galaxyWorkflowService;
 		this.workspaceService = workspaceService;
 		this.iridaWorkflowsService = iridaWorkflowsService;
+		this.analysisSubmissionSampleProcessor = analysisSubmissionSampleService;
 	}
 
 	/**
@@ -131,10 +132,6 @@ public class AnalysisExecutionServiceGalaxyAsync {
 	 *             If there was an exception submitting the analysis to the
 	 *             execution manager.
 	 * @throws IridaWorkflowException If there was an issue with the IRIDA workflow.
-	 */
-	/*
-	 * Method used to be @Transactional. This was removed as the txn was timing
-	 * out while data was trying to upload.
 	 */
 	@RunAsUser("#analysisSubmission.getSubmitter()")
 	public Future<AnalysisSubmission> executeAnalysis(AnalysisSubmission analysisSubmission)
@@ -195,16 +192,48 @@ public class AnalysisExecutionServiceGalaxyAsync {
 		logger.trace("Saving results for " + submittedAnalysis);
 		Analysis savedAnalysis = analysisService.create(analysisResults);
 
-		submittedAnalysis.setAnalysisState(AnalysisState.COMPLETED);
-		try{
-			submittedAnalysis.setAnalysis(savedAnalysis);
+		// if samples should be updated, set to TRANSFERRED.  Otherwise just complete.
+		if (submittedAnalysis.getUpdateSamples()) {
+			submittedAnalysis.setAnalysisState(AnalysisState.TRANSFERRED);
+		} else {
+			submittedAnalysis.setAnalysisState(AnalysisState.COMPLETED);
 		}
-		catch(AnalysisAlreadySetException e){
+
+		try {
+			submittedAnalysis.setAnalysis(savedAnalysis);
+		} catch (AnalysisAlreadySetException e) {
 			throw new ExecutionManagerException("Analysis already set", e);
 		}
-		
+
 		AnalysisSubmission completedSubmission = analysisSubmissionService.update(submittedAnalysis);
 
 		return new AsyncResult<>(completedSubmission);
+	}
+
+	/**
+	 * Calls the {@link AnalysisSubmissionSampleProcessor} to perform any post processing required on a given {@link AnalysisSubmission}
+	 *
+	 * @param analysisSubmission the {@link AnalysisSubmission} to process
+	 * @return a Future {@link AnalysisSubmission}
+	 */
+	@Transactional
+	@RunAsUser("#analysisSubmission.getSubmitter()")
+	public Future<AnalysisSubmission> postProcessResults(AnalysisSubmission analysisSubmission) {
+		checkNotNull(analysisSubmission, "submittedAnalysis is null");
+
+		if (analysisSubmission.getUpdateSamples()) {
+			try {
+				analysisSubmissionSampleProcessor.updateSamples(analysisSubmission);
+			} catch (Exception e) {
+				logger.error("Error updating corresponding samples with analysis results for AnalysisSubmission = ["
+						+ analysisSubmission.getId() + "]. Skipping this step.", e);
+			}
+		}
+
+		analysisSubmission.setAnalysisState(AnalysisState.COMPLETED);
+
+		analysisSubmission = analysisSubmissionService.update(analysisSubmission);
+
+		return new AsyncResult<>(analysisSubmission);
 	}
 }

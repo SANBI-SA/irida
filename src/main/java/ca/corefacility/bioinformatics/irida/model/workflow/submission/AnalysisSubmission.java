@@ -1,42 +1,8 @@
 package ca.corefacility.bioinformatics.irida.model.workflow.submission;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.*;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -47,21 +13,23 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import ca.corefacility.bioinformatics.irida.exceptions.AnalysisAlreadySetException;
 import ca.corefacility.bioinformatics.irida.model.IridaResourceSupport;
 import ca.corefacility.bioinformatics.irida.model.MutableIridaThing;
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisCleanedState;
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisState;
 import ca.corefacility.bioinformatics.irida.model.project.ReferenceFile;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
-import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
+import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.Analysis;
+import ca.corefacility.bioinformatics.irida.model.workflow.analysis.JobError;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Defines a submission to an AnalysisService for executing a remote workflow.
@@ -116,14 +84,10 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	 */
 	@Column(name = "remote_workflow_id")
 	private String remoteWorkflowId;
-	
-	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
-	@JoinTable(name = "analysis_submission_sequence_file_single_end", joinColumns = @JoinColumn(name = "analysis_submission_id", nullable = false), inverseJoinColumns = @JoinColumn(name = "sequencing_object_id", nullable = false))
-	private Set<SingleEndSequenceFile> inputFilesSingleEnd;
 
-	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
-	@JoinTable(name = "analysis_submission_sequence_file_pair", joinColumns = @JoinColumn(name = "analysis_submission_id", nullable = false), inverseJoinColumns = @JoinColumn(name = "sequence_file_pair_id", nullable = false))
-	private Set<SequenceFilePair> inputFilesPaired;
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.DETACH)
+	@JoinTable(name = "analysis_submission_sequencing_object", joinColumns = @JoinColumn(name = "analysis_submission_id", nullable = false), inverseJoinColumns = @JoinColumn(name = "sequencing_object_id", nullable = false))
+	private Set<SequencingObject> inputFiles;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@MapKeyColumn(name = "name", nullable = false)
@@ -169,9 +133,17 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	private List<ProjectAnalysisSubmissionJoin> projects;
 
 	@NotAudited
+	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, mappedBy = "analysisSubmission")
+	private List<JobError> jobErrors;
+
+	@NotAudited
 	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
 	@JoinColumn(name = "named_parameters_id")
 	private IridaWorkflowNamedParameters namedParameters;
+	
+	@NotNull
+	@Column(name = "update_samples")
+	private boolean updateSamples;
 
 	protected AnalysisSubmission() {
 		this.createdDate = new Date();
@@ -183,6 +155,10 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	@Lob
 	private String analysisDescription;
 
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	private Priority priority;
+
 	/**
 	 * Builds a new {@link AnalysisSubmission} with the given {@link Builder}.
 	 * 
@@ -193,18 +169,19 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 		this();
 		checkNotNull(builder.workflowId, "workflowId is null");
 
-		checkArgument(builder.inputFilesSingleEnd != null || builder.inputFilesPaired != null,
-				"all input file collections are null.  You must supply at least one set of input files");
+		checkArgument(builder.inputFiles != null,
+				"input file collection is null.  You must supply at least one set of input files");
 
 		this.name = (builder.name != null) ? builder.name : "Unknown";
-		this.inputFilesSingleEnd = (builder.inputFilesSingleEnd != null) ? builder.inputFilesSingleEnd : Sets.newHashSet();
-		this.inputFilesPaired = (builder.inputFilesPaired != null) ? builder.inputFilesPaired : Sets.newHashSet();
+		this.inputFiles = builder.inputFiles;
 		this.inputParameters = (builder.inputParameters != null) ? ImmutableMap.copyOf(builder.inputParameters)
 				: ImmutableMap.of();
 		this.referenceFile = builder.referenceFile;
 		this.workflowId = builder.workflowId;
 		this.namedParameters = builder.namedParameters;
 		this.analysisDescription = (builder.analysisDescription);
+		this.updateSamples = builder.updateSamples;
+		this.priority = builder.priority;
 	}
 
 	/**
@@ -235,26 +212,6 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	@JsonIgnore
 	public String getRemoteAnalysisId() {
 		return remoteAnalysisId;
-	}
-
-	/**
-	 * Gets the set of single-end input sequence files.
-	 * 
-	 * @return The set of single-end input sequence files.
-	 */	
-	@JsonIgnore
-	public Set<SingleEndSequenceFile> getInputFilesSingleEnd() {
-		return inputFilesSingleEnd;
-	}
-
-	/**
-	 * Gets the set of paired-end input sequence files.
-	 * 
-	 * @return The set of paired-end input sequence files.
-	 */
-	@JsonIgnore
-	public Set<SequenceFilePair> getPairedInputFiles() {
-		return inputFilesPaired;
 	}
 
 	/**
@@ -364,6 +321,14 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	@JsonIgnore
 	public User getSubmitter() {
 		return submitter;
+	}
+
+	public Priority getPriority() {
+		return priority;
+	}
+
+	public void setPriority(Priority priority) {
+		this.priority = priority;
 	}
 
 	/**
@@ -503,13 +468,14 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	 */
 	public static class Builder {
 		private String name;
-		private Set<SingleEndSequenceFile> inputFilesSingleEnd;
-		private Set<SequenceFilePair> inputFilesPaired;
+		private Set<SequencingObject> inputFiles;
 		private ReferenceFile referenceFile;
 		private UUID workflowId;
 		private Map<String, String> inputParameters;
 		private IridaWorkflowNamedParameters namedParameters;
 		private String analysisDescription;
+		private boolean updateSamples = false;
+		private Priority priority = Priority.MEDIUM;
 
 		/**
 		 * Creates a new {@link Builder} with a workflow id.
@@ -539,31 +505,17 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 		}
 
 		/**
-		 * Sets this {@link SingleEndSequenceFile}s for this submission
-		 * 
-		 * @param inputFilesSingleEnd
-		 *            {@link SingleEndSequenceFile}s for this submission
-		 * @return a {@link Builder}
-		 */
-		public Builder inputFilesSingleEnd(Set<SingleEndSequenceFile> inputFilesSingleEnd) {
-			checkNotNull(inputFilesSingleEnd);
-			checkArgument(!inputFilesSingleEnd.isEmpty());
-			this.inputFilesSingleEnd = inputFilesSingleEnd;
-			return this;
-		}
-
-		/**
 		 * Sets the inputFilesPaired for this submission.
 		 * 
-		 * @param inputFilesPaired
+		 * @param inputFiles
 		 *            The inputFilesPaired for this submission.
 		 * @return A {@link Builder}.
 		 */
-		public Builder inputFilesPaired(Set<SequenceFilePair> inputFilesPaired) {
-			checkNotNull(inputFilesPaired, "inputFilesPaired is null");
-			checkArgument(!inputFilesPaired.isEmpty(), "inputFilesPaired is empty");
+		public Builder inputFiles(Set<SequencingObject> inputFiles) {
+			checkNotNull(inputFiles, "inputFiles is null");
+			checkArgument(!inputFiles.isEmpty(), "inputFiles is empty");
 
-			this.inputFilesPaired = inputFilesPaired;
+			this.inputFiles = inputFiles;
 			return this;
 		}
 
@@ -648,9 +600,38 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 			return this;
 		}
 
+		/**
+		 * Sets the {@link Priority} of the analysis run
+		 *
+		 * @param priority the priority of the analysis
+		 * @return a {@link Builder}
+		 */
+		public Builder priority(final Priority priority){
+			this.priority = priority;
+			return this;
+		}
+
+		/**
+		 * Turns on/off updating of samples from results for this analysis
+		 * submission.
+		 * 
+		 * @param updateSamples
+		 *            Turn on/off updating samples.
+		 * @return A {@link Builder}
+		 */
+		public Builder updateSamples(boolean updateSamples) {
+			this.updateSamples = updateSamples;
+
+			return this;
+		}
+
+		/**
+		 * Build the analysis submission from the set parameters
+		 * @return the new AnalysisSubmission
+		 */
 		public AnalysisSubmission build() {
-			checkArgument(inputFilesSingleEnd != null || inputFilesPaired != null,
-					"all input file collections are null.  You must supply at least one set of input files");
+			checkArgument(inputFiles != null,
+					"input file collection is null.  You must supply at least one set of input files");
 
 			return new AnalysisSubmission(this);
 		}
@@ -697,12 +678,27 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	public boolean hasRemoteInputDataId() {
 		return remoteInputDataId != null;
 	}
+	
+	/**
+	 * Sets flag to indicate whether or not samples in the submission should be updated with analysis results following completion.
+	 * @param updateSamples If true, updates samples from results on completion.
+	 */
+	public void setUpdateSamples(boolean updateSamples) {
+		this.updateSamples = updateSamples;
+	}
+
+	/**
+	 * Whether or not to update samples from results on completion.
+	 * @return Update samples from results on completion.
+	 */
+	public boolean getUpdateSamples() {
+		return updateSamples;
+	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(name, workflowId, remoteAnalysisId, remoteInputDataId, remoteWorkflowId, inputFilesSingleEnd,
-				inputFilesPaired, createdDate, modifiedDate, analysisState, analysisCleanedState, analysis,
-				referenceFile, namedParameters, submitter);
+		return Objects.hash(name, workflowId, remoteAnalysisId, remoteInputDataId, remoteWorkflowId, createdDate,
+				modifiedDate, analysisState, analysisCleanedState, analysis, referenceFile, namedParameters, submitter, priority);
 	}
 
 	@Override
@@ -714,12 +710,11 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 					&& Objects.equals(remoteAnalysisId, p.remoteAnalysisId)
 					&& Objects.equals(remoteInputDataId, p.remoteInputDataId)
 					&& Objects.equals(remoteWorkflowId, p.remoteWorkflowId)
-					&& Objects.equals(inputFilesSingleEnd, p.inputFilesSingleEnd)
-					&& Objects.equals(inputFilesPaired, p.inputFilesPaired)
 					&& Objects.equals(analysisState, p.analysisState)
 					&& Objects.equals(analysisCleanedState, p.analysisCleanedState)
-					&& Objects.equals(referenceFile, p.referenceFile)
-					&& Objects.equals(namedParameters, p.namedParameters) && Objects.equals(submitter, p.submitter);
+					&& Objects.equals(referenceFile, p.referenceFile) && Objects
+					.equals(namedParameters, p.namedParameters) && Objects.equals(submitter, p.submitter) && Objects
+					.equals(priority, p.priority);
 		}
 
 		return false;
@@ -728,5 +723,14 @@ public class AnalysisSubmission extends IridaResourceSupport implements MutableI
 	@Override
 	public int compareTo(AnalysisSubmission o) {
 		return modifiedDate.compareTo(o.modifiedDate);
+	}
+
+	/**
+	 * Enum encoding the priority of analysis submissions
+	 */
+	public enum Priority {
+		LOW,
+		MEDIUM,
+		HIGH;
 	}
 }

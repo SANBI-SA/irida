@@ -5,8 +5,8 @@ import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.sample.MetadataTemplate;
 import ca.corefacility.bioinformatics.irida.model.user.Role;
 import ca.corefacility.bioinformatics.irida.model.user.User;
-import ca.corefacility.bioinformatics.irida.security.permissions.ManageLocalProjectSettingsPermission;
-import ca.corefacility.bioinformatics.irida.security.permissions.ProjectOwnerPermission;
+import ca.corefacility.bioinformatics.irida.security.permissions.project.ManageLocalProjectSettingsPermission;
+import ca.corefacility.bioinformatics.irida.security.permissions.project.ProjectOwnerPermission;
 import ca.corefacility.bioinformatics.irida.service.sample.MetadataTemplateService;
 import ca.corefacility.bioinformatics.irida.service.user.UserService;
 import com.google.common.collect.ImmutableMap;
@@ -53,13 +53,10 @@ public class ProjectControllerUtils {
 	 * <li>Sidebar Information</li>
 	 * <li>If the current user is an admin</li>
 	 * </ul>
-	 * 
-	 * @param model
-	 *            {@link Model} for the current view.
-	 * @param principal
-	 *            {@link Principal} currently logged in user.
-	 * @param project
-	 *            {@link} current project viewed.
+	 *
+	 * @param model     {@link Model} for the current view.
+	 * @param principal {@link Principal} currently logged in user.
+	 * @param project   current project viewed.
 	 */
 	public void getProjectTemplateDetails(Model model, Principal principal, Project project) {
 		User loggedInUser = userService.getUserByUsername(principal.getName());
@@ -73,6 +70,9 @@ public class ProjectControllerUtils {
 
 		boolean isOwner = projectOwnerPermission.isAllowed(authentication, project);
 		model.addAttribute("isOwner", isOwner);
+		
+		boolean isOwnerAllowRemote = projectMembersPermission.isAllowed(authentication, project);
+		model.addAttribute("isOwnerAllowRemote", isOwnerAllowRemote);
 
 		boolean manageMembers = projectMembersPermission.isAllowed(authentication, project);
 		model.addAttribute("manageMembers", manageMembers);

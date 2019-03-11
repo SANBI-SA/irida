@@ -75,13 +75,8 @@ public class AssociatedProjectEditPage extends AbstractPage {
 
 	public boolean checkNotyStatus(String status) {
 		WebElement noty = (new WebDriverWait(driver, 10)).until(ExpectedConditions.elementToBeClickable(By
-				.className("noty_type_" + status)));
+				.className("noty_type__" + status)));
 		return noty.isDisplayed();
-	}
-
-	public void viewRemoteTab() {
-		driver.findElement(By.id("remote-tab")).click();
-		waitForTime(1000);
 	}
 
 	// ************************************************************************************************

@@ -1,6 +1,5 @@
 package ca.corefacility.bioinformatics.irida.ria.integration.pages;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,14 +45,15 @@ public class ProjectMembersPage extends AbstractPage {
 		return driver.findElement(By.tagName("h1")).getText();
 	}
 
-	public List<String> getProjectMembersNames() {
-		List<WebElement> els = driver.findElements(By.cssSelector("span.col-names"));
+	public List<String> 	getProjectMembersNames() {
+		List<WebElement> els = driver.findElements(By.cssSelector("td:first-child a"));
 		return els.stream().map(WebElement::getText).collect(Collectors.toList());
 	}
 
 	public void clickRemoveUserButton(Long id) {
 		logger.debug("Clicking remove user button for " + id);
-		WebElement removeUserButton = driver.findElement(By.id("remove-member-" + id));
+		WebElement row = waitForElementVisible(By.cssSelector("[data-user='" + id + "']"));
+		WebElement removeUserButton = row.findElement(By.className("remove-btn"));
 		removeUserButton.click();
 	}
 
@@ -79,7 +79,7 @@ public class ProjectMembersPage extends AbstractPage {
 		boolean present = false;
 		try {
 			(new WebDriverWait(driver, 10)).until(ExpectedConditions.presenceOfElementLocated(By
-					.className("noty_type_success")));
+					.className("noty_type__success")));
 			present = true;
 		} catch (NoSuchElementException e) {
 			present = false;
@@ -89,21 +89,21 @@ public class ProjectMembersPage extends AbstractPage {
 	}
 
 	public void clickAddMember() {
-		WebElement addMembers = driver.findElement(By.id("add-members-button"));
+		WebDriverWait wait = new WebDriverWait(driver, 10);
+		WebElement addMembers = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("add-members-button")));
 		addMembers.click();
 		waitForAjax();
 	}
 
 	public void addUserToProject(final String username, final ProjectRole role) {
-		WebElement userElement = waitForElementVisible(By.className("select2-choice"));
+		WebElement userElement = waitForElementVisible(By.className("select2-selection"));
 		userElement.click();
-		WebElement userField = waitForElementVisible(By.className("select2-input"));
+		WebElement userField = waitForElementVisible(By.className("select2-search__field"));
 		// we're using select2 on the user element so it ends up being made into
 		// an input box rather than a select.
 		userField.sendKeys(username);
-		Collection<WebElement> selectUserDropdown = waitForElementsVisible(By.className("select2-result-label"));
-		
-		selectUserDropdown.iterator().next().click();
+		WebElement selection = waitForElementVisible(By.className("select2-results__option--highlighted"));
+		selection.click();
 
 		WebElement roleElement = driver.findElement(By.id("add-member-role"));
 		Select roleSelect = new Select(roleElement);

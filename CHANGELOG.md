@@ -1,9 +1,170 @@
 Changes
 =======
 
+19.01 to 19.04
+--------------
+* [UI/Developer]: Updated to lodash v4.17.11 to fix security issue. (19.01.1)
+* [Admin]: Added message to add `irida.db.profile` param for Tomcat in docs and upgrading guide.
+
+0.22.0 to 19.01
+----------------
+* [Admin]: Updated versioning to a [CalVer](https://calver.org/) scheme of YY.0M.MICRO.  New feature releases will have the appropriate the year and month fields, where bugfixes will increment the MICRO field.
+* [Database]: Fixed an issue where metadata entries derived from pipelines were not updating the associated analysis submission and ignorning blank entries. (0.23.5)
+* [Developer]: Added classes `.jar` maven export in build process.
+* [UI]: Added the sample coverage to the table exported from the project samples page.
+* [UI/Workflow]: Added option to disable workflows/analysis types from display in IRIDA using `irida.workflow.types.disabled`. (0.22.1)
+* [Developer]: Added wait when NCBI Uploader fails before retrying. (0.22.1)
+* [UI]: Users can now download in batch their user-generated, shared with project and automated project single sample analysis output files by selecting the files they wish to download from tables on the `/analysis/user/analysis-outputs`, `/projects/<id>/analyses/shared-outputs`, and `/projects/<id>/analyses/automated-outputs` pages, respectively.
+* [UI]: Added configurable warning for analysis results and metadata pages.  Set the text for this warning with `irida.analysis.warning`.  This can be used to communicate that results of analyses may be preliminary.
+* [Admin]: Added new profiles to allow IRIDA web server to run in a clustered fashion.  See documentation at https://irida.corefacility.ca/documentation/administrator/web/#multi-web-server-configuration
+* [UI]: Fixed bug where all moved samples were locked. (0.22.2)
+* [UI/Developer]: Updated to lodash v4.17.10 to fix security issue. (0.22.2)
+* [UI]: Fixed bug where project samples page would freeze if there where numerous QC Issues. (0.22.3)
+* [UI]: Fixed error where synchronizing sequence files could lead to truncated files without generating an error. (0.22.3)
+* [UI]: Adding NCBI SRA accession to sample metadata when uploading data to NCBI.
+* [Developer]: Updated FastQC to 0.11.7.
+* [UI]: Fixed bug in sample edit page that didn't allow users to clear a field in the sample.
+* [Workflow]: Updated the AssemblyAnnotation pipeline to v0.5 and the AssemblyAnnotationCollection pipeline to v0.4. Both pipelines now use Shovill for assembly and QUAST for assembly quality assessment in addition to Prokka for annotation.
+* [API]: Fixed REST endpoint mapping for current user and user projects.
+* [Workflow]: Fixed issue where duplicate filenames were found after running Galaxy workflow in newer Galaxy versions. (0.22.4)
+* [Developer]: Added unused import checking to checkstyle config.  The `mvn site` build will throw an error if unused imports are present.
+* [Developer/Workflow]: Added the ability build pipelines into independent JAR files to be loaded in IRIDA as a plugin (after placing in `/etc/irida/plugins`). Please see <https://github.com/phac-nml/irida-plugin-example> and <https://irida.corefacility.ca/documentation/developer/tools/pipelines/> for more details.
+* [Developer]: Added additional FTP settings for NCBI uploads: `ncbi.upload.controlKeepAliveTimeout`, and `ncbi.upload.controlKeepAliveReplyTimeoutMilliseconds`.
+* [Developer]: Fixed issue with some settings in `/etc/irida/irida.conf` not being detected properly.
+* [Developer]: Added ability to adjust `jdbc.pool.maxWait` through an environment variable `DB_MAX_WAIT_MILLIS` for fixing timeout issues for tests.
+* [Developer]: Split Galaxy testing into `galaxy_testing` and `galaxy_pipeline_testing` to reduce the time it takes for all Galaxy tests to complete.
+* [Developer]: Fixed up test cases for genome assemblies and simplified saving to database.
+* [Sync]: Project sync date will be updated at start of sync job to stop quickly repeating errored syncs.
+* [UI]: IRIDA will now remove local samples when a synchronized remote sample is removed at its source.
+* [UI]: New project line list page with inline editing.
+* [Developer]: Updated Node, Yarn, and front-end webpack packages.
+* [Workflow]: Fixed Shovill Galaxy tool revision for SISTR and Assembly/Annotation pipelines.
+* [Developer]: Update to ag-grid-community v.19.1.2.
+* [Documentation]: Changed references from GitLab to GitHub in docs.
+* [UI]: Removed angular-resource, angular-messages, angular-sanitize, angular-animate, angular-datatables, ng-table and angular-drag-and-drop-lists.
+* [REST]: Added method to greatly increase speed of listing samples in a project.  This was becoming an issue for projects with metadata and >5k samples.
+* [Developer]: Added pull request and issue templates for github.
+* [Developer]: Update Docker Galaxy container to Galaxy 18.09.
+* [Administration]: Updated method for automatically installing tools in Galaxy to use [Ephemeris](https://ephemeris.readthedocs.io/en/latest/readme.html).
+* [Developer]: Updated to version 20.0.0 of ag-grid UI component.
+* [UI]: Add link back to sample for analysis input files on the Analsysis Details Page.
+* [UI]: Fixes issue where attempting to select all samples with a filter applied selected all samples in project.
+* [UI]: Fixed issue with exporting samples to galaxy through project/samples page failing.
+
+0.21.0 to 0.22.0
+----------------
+* [UI]: Fixed bug where `.xls` file could not be uploaded through the file picker on the metadata upload page. (0.21.1)
+* [Workflow]: Added version 0.1.9 of the [MentaLiST](https://github.com/WGS-TB/MentaLiST) pipeline, which includes a fix for downloading cgMLST schemes and a distance matrix output.
+* [UI]: Fixed bug where concatenate files was POSTing to incorrect URL. (0.21.2)
+* [UI]: Fixed bug where SVG files could not be exported through the advanced visualization page. (0.21.2)
+* [UI]: Fixed bug where users could not share more than nine samples. (0.21.2)
+* [UI]: Moved the position of the notification system to top center.
+* [Workflow]: Added version 2.0.0 of a pipeline for running [bio_hansel](https://github.com/phac-nml/bio_hansel) (version 2.0.0)
+* [Workflow]: Added version 0.3 of a pipeline for running [SISTR](https://github.com/peterk87/sistr_cmd/) which now makes use of [Shovill](https://github.com/tseemann/shovill) for genome assembly.
+* [Workflow]: Updated SISTR pipeline to store the following additional fields in the metadata table: serogroup, O antigen, H1, H2, and alleles matching genome.
+* [UI]: Users can save analysis results to samples after pipeline is done in "Share Results" tab.
+* [UI]: Fixed bug where edit groups page would throw a server exception. (0.21.3)
+* [UI]: Hiding user page project list for non-admins.
+* [Workflow]: Fixed bug where auto updating metadata from analysis submission failed for non-admin user. (0.21.4)
+* [UI]: Fixed bug where admin dropdown menu was hidden behind sequencing run sub navigation.
+* [Developer]: Moved file processing chain outside of SequencingObjectService.  It now runs as a scheduled task.  This will help balance the processing load in multi-server deployments.
+* [UI]: Ensuring `ROLE_SEQUENCER` users get "Access Denied" for any attempted UI interactions.
+* [Developer]: Updated `yarn` to the current version.
+* [UI/Workflow]: Pipeline analysis output files are rendered in the same order as they appear in the pipeline `irida_workflow.xml` in the `<outputs>` XML element.
+* [Developer]: Can now specify which `chromedriver` to use in UI testing with `-Dwebdriver.chrome.driver=/PATH/TO/chromedriver`.
+* [UI]: Fixes slow Sample cart. Quicker saving of large selections of samples to cart (`POST /cart/add/samples`) and loading of existing cart Samples (`GET /cart`).  
+
+0.20.0 to 0.21.0
+----------------
+* [Workflow]: Added version 0.1 of a pipeline for running [MentaLiST](https://github.com/WGS-TB/MentaLiST) (version 0.1.3).
+* [Workflow]: Added version 0.1 of a pipeline for running Mash against the refseq database [refseq_masher](https://github.com/phac-nml/refseq_masher).
+* [UI]: Fixed bug where user could not cancel the upload of a sequence file on the Sample Files page.
+* [UI/Workflow]: Fixed bug where users could not submit large analyses due to an HTTP 414 "Request URI Too Long" error.
+* [Developer]: Removed old gulp dependencies from the `package.json` file.
+* [Developer]: Update to stable releases of `node` and `yarn`.
+* [Administration]: Disabled automated SISTR results from saving to sample metadata.  Also disabled retrospective results from being added during the database update.  Installations that have already performed the 0.20.0 update will have their retrospective automated SISTR results automatically added to sample metadata.  Installations that jump directly to 0.20.1 and above will not have this data added to sample metadata. (0.20.1)
+* [UI/Workflow]: Preview analysis output files in a tabular or plain-text view in the analysis details page under the Preview tab. 
+
+0.19.0 to 0.20.0
+----------------
+* [Developer]: Fixed exception being thrown related to permission denied for updating samples when a normal user (collaborator on a project) runs the assembly pipeline (0.19.1).
+* [UI]: Allowing admins to manually prioritize high importance analyses.
+* [Developer]: Removed dandelion from project > samples page.
+* [UI]: Fixed issue where Projects table could not be exported (0.19.2).
+* [UI]: Fixed user menu icons misaligning in Firefox (0.19.2).
+* [Developer]: Updated front end templating engine to Thymeleaf v3.
+* [Administration]: Added option to expire passwords after a configured number of days.  Set `security.password.expiry` in `/etc/irida/irida.conf` to configure.
+* [Administration]: Limiting users from reusing passwords.
+* [Developer]: Updated webpack compile path to be `resources/dist`.
+* [Developer]: Webpack now extracts `css` / `scss` into its own bundles.
+* [UI]: Added minification to production javascript.
+* [UI]: Fixed issue where delete project button was always enabled, and created an error when clicked. (0.19.3)
+* [UI]: Clean up of the main navigation bar code, and removed its dependency on angular-ui.
+* [UI]: Fixed reflow layout of pipeline launch page.
+* [UI]: Changed the wording of 'copying' samples to 'sharing' samples.
+* [UI]: Allow users to share (copy) samples from a remote project. Disabled menu items for move and merge.
+* [Developer]: Ran `prettier` on all javascript files within `resources/js`.
+* [Developer]: Ran `prettier` on all scss files within `resources/sass`.
+* [Developer]: Add a git pre-commit hook to ensure `prettier` formatting.
+* [UI]: Fixed issue where all activities page could not be displayed.
+* [UI]: Fixed issue where time stamps where not displayed on activities pages.
+* [UI]: Fixed issue where breadcrumbs were not displaying on the Project > Line List and Project > Analyses pages.
+* [UI]: Cleaned up sub-navigation elements on samples and files.
+* [UI]: Updated Remote API pages (datatables, and removed Noty modals).  
+* [UI]: Fixed issue where breadcrumbs not displaying on the Samples > File > QC Analsis pages.
+* [UI]: Removed search box from sequencing run page.
+* [UI/Workflow]: Galaxy job error info retrieved from Galaxy if a workflow submission fails. Job error info is shown in Analyses table and on the Analysis page if it exists. 
+* [UI]: Fixed issue with Upload Sequence Files button when SequenceFiles page resized.
+* [UI]: SISTR able to write metadata back to samples.
+
+0.18.0 to 0.19.0
+----------------
+* [Developer]: Removed the requirement for pipeline developers to add an `Analysis` subclass and database tables for pipelines.  All pipeline results can now be stored in the `Analysis` class.
+* [Developer]: Fixed issue where bootstrap was being loaded twice onto the page. (0.18.1)
+* [UI]: Fixed URL for concatenation of sample sequence files. (0.18.1)
+* [Developer]: Removed dandelion from: Announcements, Cart, Sequencing Runs, Login, Project Settings - Landing, Events, Create Sample, Line List, Announcements - Create & Read, Livestampjs, Pipelines Launch, lodash, NCBI Export Page, Session Handler, Project Members and Groups Server Side,  NCBI export lists, Groups Listing, Group Members.
+* [UI]: Added empty state if no files exist in a sample.
+* [UI]: Added ability to associate assemblies with a sample.
+* [UI]: Fix broken link for concatenating files. (0.18.2)
+* [UI]: Fix broken permissions for downloading reference files not associated with a project. (0.18.2)
+* [UI]: Fixed issued with layout of the events panel on the dashboard page. (0.18.2)
+* [UI]: Fixed issue with local samples causing problems in synchronized projects. (0.18.2)
+* [API]: Fixed permission issue when asking for permission for analysis results using sequencing objects with no associated samples (0.18.3).
+* [UI]: Cleaned up styles on DataTables with fixed columns.
+* [Developer]: Upgraded to v5.3.0 of `npm`, and changed build process to use `yarn`.
+* [API]: NCBI uploads automatically retry after failure.
+* [UI]: Added global project and sample search from top toolbar.
+* [UI]: Changed user's modified date to "Last Login" in user list.
+* [Developer]: Created `production` and `development` webpack builds.
+* [UI]: Fixed issue with uploading `.fastqc` files in IE, and allow for uploading for `fastqc.gz` in all browsers (0.18.4).
+* [UI]: Added ability to update an analysis submission name after it's been submitted.
+* [Developer]: Added `run-tests.sh` script for running local integration tests.
+* [UI]: Fixed issue with exporting `csv` and `excel` from Project > Samples pages (0.18.5).
+* [UI]: Fixed bug with importing large `excel` file that contained columns with only a header and no other data in column.
+* [UI]: Fixed project sync settings from resetting themselves.
+
 0.17.0 to 0.18.0
 ----------------
+* [Developer]: Removed old javascript build configuration files.
+* [Developer]: Cleaned up javascript imports (removed all `require` statements).
+* [UI]: Removed phylocanvas context menu from analysis > details page.
+* [Workflow]: Made workflows applying to a single sample to include sample name in all output files. Updated previous output files in database to also include sample name if corresponding workflow used only a single sample.
+* [UI]: Added buttons on the project settings page, and metadata template page to download an excel template.
+* [Developer]: Reorganized permissions classes into subpackages.
+* [UI]: Added maximum coverage quality control option.
 * [UI]: Allowing admins to delete synchronized data so it will be resynchronized if there was a problem. Note any changes made to synchronized samples will be overwritten on the next sync job.  (0.17.1)
+* [Developer]: Checking if single end files have been synchronized to stop duplication.
+* [Developer]: Changed relationship of sequence files to a single collection in AnalysisSubmission instead of a collection for each file type.
+* [Documentation]: Rewrote Galaxy installation guide, added sections for linking IRIDA to existing Galaxy or to a pre-build Docker image.
+* [Developer]: Removed `Dandelion` dependencies from the dashboard, projects listing, & users listing pages.
+* [Developer]: Created new DataTables request handler to enable removing Dandelion DataTables.
+* [API]: Performance improvements when listing analyses of a specific type in the REST API.
+* [Developer]: Changed file processing chain to try to avoid errors in processing.
+* [API]: Added REST API endpoints for accessing all analyses associated with a project and for accessing automated analyses.
+* [UI]: Added ability to concatenate sequence files in a sample.
+* [UI]: New feature to export metadata through the Project line list view.
+* [UI]: Fixed bug allowing empty library name for Galaxy exporting.
+* [UI]: Added ability to download individual analysis output files.
 
 0.16.0 to 0.17.0
 ----------------

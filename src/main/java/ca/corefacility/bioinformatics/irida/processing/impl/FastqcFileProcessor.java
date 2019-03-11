@@ -1,37 +1,5 @@
 package ca.corefacility.bioinformatics.irida.processing.impl;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.imageio.ImageIO;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import uk.ac.babraham.FastQC.Graphs.LineGraph;
-import uk.ac.babraham.FastQC.Graphs.QualityBoxPlot;
-import uk.ac.babraham.FastQC.Modules.BasicStats;
-import uk.ac.babraham.FastQC.Modules.DuplicationLevel;
-import uk.ac.babraham.FastQC.Modules.OverRepresentedSeqs;
-import uk.ac.babraham.FastQC.Modules.OverRepresentedSeqs.OverrepresentedSeq;
-import uk.ac.babraham.FastQC.Modules.PerBaseQualityScores;
-import uk.ac.babraham.FastQC.Modules.PerSequenceQualityScores;
-import uk.ac.babraham.FastQC.Modules.QCModule;
-import uk.ac.babraham.FastQC.Sequence.Sequence;
-import uk.ac.babraham.FastQC.Sequence.SequenceFactory;
-import uk.ac.babraham.FastQC.Sequence.QualityEncoding.PhredEncoding;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.OverrepresentedSequence;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFile;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
@@ -40,7 +8,32 @@ import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisFast
 import ca.corefacility.bioinformatics.irida.processing.FileProcessor;
 import ca.corefacility.bioinformatics.irida.processing.FileProcessorException;
 import ca.corefacility.bioinformatics.irida.repositories.sequencefile.SequenceFileRepository;
-import ca.corefacility.bioinformatics.irida.repositories.sequencefile.SequencingObjectRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import uk.ac.babraham.FastQC.FastQCApplication;
+import uk.ac.babraham.FastQC.Graphs.LineGraph;
+import uk.ac.babraham.FastQC.Graphs.QualityBoxPlot;
+import uk.ac.babraham.FastQC.Modules.*;
+import uk.ac.babraham.FastQC.Modules.OverRepresentedSeqs.OverrepresentedSeq;
+import uk.ac.babraham.FastQC.Sequence.QualityEncoding.PhredEncoding;
+import uk.ac.babraham.FastQC.Sequence.Sequence;
+import uk.ac.babraham.FastQC.Sequence.SequenceFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Executes FastQC on a {@link SequenceFile} and stores the report in the
@@ -57,7 +50,6 @@ public class FastqcFileProcessor implements FileProcessor {
 	private static final String EXECUTION_MANAGER_ANALYSIS_ID = "internal-fastqc";
 
 	private final SequenceFileRepository sequenceFileRepository;
-	private final SequencingObjectRepository objectRepository;
 	private final MessageSource messageSource;
 
 	/**
@@ -68,27 +60,17 @@ public class FastqcFileProcessor implements FileProcessor {
 	 *            description for the analysis).
 	 * @param sequenceFileRepository
 	 *            the sequence file repository.
-	 * @param objectRepository
-	 *            {@link SequencingObjectRepository} to read
-	 *            {@link SequencingObject}s
 	 */
 	@Autowired
-	public FastqcFileProcessor(final MessageSource messageSource, final SequenceFileRepository sequenceFileRepository,
-			final SequencingObjectRepository objectRepository) {
+	public FastqcFileProcessor(final MessageSource messageSource, final SequenceFileRepository sequenceFileRepository) {
 		this.messageSource = messageSource;
 		this.sequenceFileRepository = sequenceFileRepository;
-		this.objectRepository = objectRepository;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	@Transactional
-	public void process(final Long sequencingObjectId) throws FileProcessorException {
-		SequencingObject seqObj = objectRepository.findOne(sequencingObjectId);
-
-		for (SequenceFile file : seqObj.getFiles()) {
+	public void process(SequencingObject sequencingObject) {
+		for (SequenceFile file : sequencingObject.getFiles()) {
 			processSingleFile(file);
 		}
 	}
@@ -103,12 +85,10 @@ public class FastqcFileProcessor implements FileProcessor {
 	 */
 	private void processSingleFile(SequenceFile sequenceFile) throws FileProcessorException {
 		Path fileToProcess = sequenceFile.getFile();
-		AnalysisFastQC.AnalysisFastQCBuilder analysis = AnalysisFastQC
-				.builder()
-				.executionManagerAnalysisId(EXECUTION_MANAGER_ANALYSIS_ID)
-				.description(
-						messageSource.getMessage("fastqc.file.processor.analysis.description", null,
-								LocaleContextHolder.getLocale()));
+		AnalysisFastQC.AnalysisFastQCBuilder analysis = AnalysisFastQC.builder()
+				.fastqcVersion(FastQCApplication.VERSION).executionManagerAnalysisId(EXECUTION_MANAGER_ANALYSIS_ID)
+				.description(messageSource.getMessage("fastqc.file.processor.analysis.description",
+						new Object[] { FastQCApplication.VERSION }, LocaleContextHolder.getLocale()));
 		try {
 			uk.ac.babraham.FastQC.Sequence.SequenceFile fastQCSequenceFile = SequenceFactory
 					.getSequenceFile(fileToProcess.toFile());
@@ -138,7 +118,7 @@ public class FastqcFileProcessor implements FileProcessor {
 
 			sequenceFile.setFastQCAnalysis(analysis.build());
 
-			sequenceFileRepository.save(sequenceFile);
+			sequenceFileRepository.saveMetadata(sequenceFile);
 		} catch (Exception e) {
 			logger.error("FastQC failed to process the sequence file. Stack trace follows.", e);
 			throw new FileProcessorException("FastQC failed to parse the sequence file.", e);
@@ -158,11 +138,11 @@ public class FastqcFileProcessor implements FileProcessor {
 		analysis.encoding(PhredEncoding.getFastQEncodingOffset(stats.getLowestChar()).name());
 		analysis.minLength(stats.getMinLength());
 		analysis.maxLength(stats.getMaxLength());
-		analysis.totalSequences(stats.getActualCount());
-		analysis.filteredSequences(stats.getFilteredCount());
+		analysis.totalSequences((int) stats.getActualCount());
+		analysis.filteredSequences((int) stats.getFilteredCount());
 		analysis.gcContent(stats.getGCContent());
-		analysis.totalBases(stats.getACount() + stats.getGCount() + stats.getCCount() + stats.getTCount()
-				+ stats.getNCount());
+		analysis.totalBases(
+				stats.getACount() + stats.getGCount() + stats.getCCount() + stats.getTCount() + stats.getNCount());
 	}
 
 	/**

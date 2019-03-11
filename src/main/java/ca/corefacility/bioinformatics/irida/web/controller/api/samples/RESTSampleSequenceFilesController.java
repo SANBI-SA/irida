@@ -34,6 +34,7 @@ import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.AnalysisFastQC;
+import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
 import ca.corefacility.bioinformatics.irida.service.AnalysisService;
 import ca.corefacility.bioinformatics.irida.service.SequencingObjectService;
 import ca.corefacility.bioinformatics.irida.service.SequencingRunService;
@@ -41,6 +42,7 @@ import ca.corefacility.bioinformatics.irida.service.sample.SampleService;
 import ca.corefacility.bioinformatics.irida.web.assembler.resource.ResourceCollection;
 import ca.corefacility.bioinformatics.irida.web.assembler.resource.RootResource;
 import ca.corefacility.bioinformatics.irida.web.assembler.resource.sequencefile.SequenceFileResource;
+import ca.corefacility.bioinformatics.irida.web.controller.api.RESTAnalysisSubmissionController;
 import ca.corefacility.bioinformatics.irida.web.controller.api.RESTGenericController;
 import ca.corefacility.bioinformatics.irida.web.controller.api.projects.RESTProjectSamplesController;
 
@@ -99,6 +101,12 @@ public class RESTSampleSequenceFilesController {
 	 */
 	public static final String REL_PAIR_FORWARD = "pair/forward";
 	public static final String REL_PAIR_REVERSE = "pair/reverse";
+	
+	/**
+	 * rel for automated analyses associated with sequencing object
+	 */
+	public static final String REL_AUTOMATED_ASSEMBLY = "analysis/assembly";
+	public static final String REL_SISTR_TYPING = "analysis/sistr";
 
 	/**
 	 * The key used in the request to add an existing {@link SequenceFile} to a
@@ -150,7 +158,7 @@ public class RESTSampleSequenceFilesController {
 	@RequestMapping(value = "/api/samples/{sampleId}/sequenceFiles", method = RequestMethod.GET)
 	public ModelMap getSampleSequenceFiles(@PathVariable Long sampleId) {
 		ModelMap modelMap = new ModelMap();
-		logger.debug("Reading seq files for sample " + sampleId);
+		logger.trace("Reading seq files for sample " + sampleId);
 		Sample sample = sampleService.read(sampleId);
 
 		Collection<SampleSequencingObjectJoin> sequencingObjectsForSample = sequencingObjectService
@@ -209,7 +217,7 @@ public class RESTSampleSequenceFilesController {
 	public ModelMap listSequencingObjectsOfTypeForSample(@PathVariable Long sampleId, @PathVariable String objectType) {
 		ModelMap modelMap = new ModelMap();
 
-		logger.debug("Reading seq file  for sample " + sampleId);
+		logger.trace("Reading seq file  for sample " + sampleId);
 		Sample sample = sampleService.read(sampleId);
 
 		Class<? extends SequencingObject> type = objectLabels.inverse().get(objectType);
@@ -552,11 +560,10 @@ public class RESTSampleSequenceFilesController {
 
 	/**
 	 * Remove a {@link SequencingObject} from a {@link Sample}.
-	 * 
-	 * @param sampleId
-	 *            the source {@link Sample} identifier.
-	 * @param objectId
-	 *            the identifier of the {@link SequencingObject} to move.
+	 *
+	 * @param sampleId   the source {@link Sample} identifier.
+	 * @param objectType The type of sequencing object being removed
+	 * @param objectId   the identifier of the {@link SequencingObject} to move.
 	 * @return a status indicating the success of the move.
 	 */
 	@RequestMapping(value = "/api/samples/{sampleId}/{objectType}/{objectId}", method = RequestMethod.DELETE)
@@ -608,11 +615,10 @@ public class RESTSampleSequenceFilesController {
 	/**
 	 * Add the links for a {@link SequencingObject} to its sample, self, to each
 	 * individual {@link SequenceFile}
-	 * 
-	 * @param sequencingObject
-	 *            {@link SequencingObject} to enhance
-	 * @param sampleId
-	 *            ID of the {@link Sample} for the object
+	 *
+	 * @param sequencingObject {@link SequencingObject} to enhance
+	 * @param sampleId         ID of the {@link Sample} for the object
+	 * @param <T>              The subclass of {@link SequencingObject} being enhanced by this method
 	 * @return the enhanced {@link SequencingObject}
 	 */
 	@SuppressWarnings("unchecked")
@@ -636,6 +642,20 @@ public class RESTSampleSequenceFilesController {
 							objectType, sequencingObject.getId(), file.getId())).withSelfRel());
 		}
 
+		AnalysisSubmission automatedAssembly = sequencingObject.getAutomatedAssembly();
+		if (automatedAssembly != null) {
+			sequencingObject
+					.add(linkTo(methodOn(RESTAnalysisSubmissionController.class).getResource(automatedAssembly.getId()))
+							.withRel(REL_AUTOMATED_ASSEMBLY));
+		}
+
+		AnalysisSubmission sistrTyping = sequencingObject.getSistrTyping();
+		if (sistrTyping != null) {
+			sequencingObject
+					.add(linkTo(methodOn(RESTAnalysisSubmissionController.class).getResource(sistrTyping.getId()))
+							.withRel(REL_SISTR_TYPING));
+		}
+		
 		// if it's a pair, add forward/reverse links
 		if (sequencingObject instanceof SequenceFilePair) {
 			sequencingObject = (T) addSequenceFilePairLinks((SequenceFilePair) sequencingObject, sampleId);

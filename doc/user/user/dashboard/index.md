@@ -41,23 +41,38 @@ From the main menu, you can click on the "Projects" button to access all project
 
 For more information about managing your projects, please see the [managing projects](../project) section.
 
-### Pipelines
+### Analyses
+
+The analyses menu displays information about analysis pipelines available in IRIDA and links to how to monitory your running pipelines.
+
+#### Pipelines
+{:.no_toc}
 
 You can view the pipelines that are installed in IRIDA by clicking on the "Pipelines" button.
 
 For more information about running pipelines, please see the [launching pipelines](../pipelines) section.
 
-### Analyses
+#### Your Analyses
+{:.no_toc}
 
 After you've launched a pipeline, you can monitor its progress and view results by clicking on the "Analyses" button.
 
 For more information about viewing pipeline results and working with analysis, please see the [viewing pipeline results](../pipelines/#viewing-pipeline-results) section.
 
-### Users
+Search
+------
 
-From the main menu, you can click on the "Users" button to access and manage user groups. You may create a new user group by clicking on "Users", then "Create Group".
+IRIDA's global search panel can be found in the middle of the navigation bar at the top of the application.  This search can be used from anywhere in the application to search for your projects and samples in the system.  To search, simply type a few character of the project or sample name you're looking for and press `Enter`.
 
-For more information about managing user groups, please see the [managing user groups](../user-groups) section.
+![IRIDA search bar](images/search-bar.png)
+
+After completing your search, you'll be taken to the *search results* page which will display all *projects* and *samples* which match your search query.  The initial results displayed will be *samples*.
+
+![IRIDA search bar](images/search-sample-result.png)
+
+To view *projects* matching your search result, click the `Projects` tab.
+
+![IRIDA search bar](images/search-project-result.png)
 
 Cart
 ----
@@ -72,25 +87,37 @@ You can click on the cart button to reveal more information about the contents o
 
 For more information about using the cart, please see the [launching pipelines](../pipelines) section, and the [managing samples](../samples) section.
 
-Remote APIs
------------
-Remote IRIDA installations can be used as data sources for associated projects and worklows.  The "Remote APIs" section allows users to connect to remote IRIDA installations.  
+Settings
+--------
+
+The <i class="fa fa-cog"></i> menu allows you to manage a number of settings for IRIDA.
+
+![Settings panel](images/settings-panel.png)
+
+### Groups
+
+From the main menu, you can click on the "Groups" link to view the groups available on the system.  You may create a new user group by clicking on "Create Group".
+
+For more information about managing user groups, please see the [managing user groups](../user-groups) section.
+
+### Remote instances of IRIDA
+
+Remote instances of IRIDA can be used as data sources for associated projects and workflows.  The "Remote IRIDA Connections" section allows users to connect to remote instances of IRIDA.  
 
 **Note**: You must have been provided with a username and password for a remote instance of IRIDA before you can use the data located on that instance.
 
-![Remote API button](images/remote-api-dash.png)
+Administrators can add or remove available remote instances of IRIDA from this menu.  Details can be found in the [administrator guide](../../administrator/#managing-remote-irida-connections).
 
-Adminstrators can add or remove available Remote APIs from this menu.  Details can be found in the [administrator guide](../../administrator/#managing-remote-apis).
+#### Connecting to remote instances of IRIDA
+{:.no_toc}
 
-### Connecting to Remote APIs
+The Remote Connections list will show you all configured remote instances of IRIDA.  To connect, click the "Connect" button next to the right of the connection status.
 
-The Remote APIs list will show you all configured Remote APIs.  To connect, click the "Connect" button next to an API.
+![Remote instances list](images/api-list.png)
 
-![Remote API list](images/api-list.png)
+If you have never connected to the remote IRIDA instance before, or your login has expired, you will be shown a login window for the remote site.  Enter your login credentials for that site.  The username and password that you use to connect to a remote instance of IRIDA are different than the username and password that you used to log in to the local site.
 
-If you have never connected to the remote API before, or your login has expired, you will be shown a login window for the remote site.  Enter your login credentials for that site.  The username and password that you use to connect to a remote instance of IRIDA are different than the username and password that you used to log in to the local site.
-
-![Remote API login page](images/remote-login.png)
+![Remote instance login page](images/remote-login.png)
 
 You will be shown an authorization page.  Read the details and click "Authorize" to connect to the API.
 
@@ -103,18 +130,15 @@ User Settings
 
 The settings menu allows you to view and edit the details of your own user account. This menu also allows you to update your email subscription preferences.  You can find the settings menu in the top, right-hand corner of the page, if you have a [Gravatar](https://en.gravatar.com/) account associated with your email in IRIDA, your gravatar will be displayed:
 
-![The settings menu in the dashboard.](images/settings.png)
+![The settings menu in the dashboard.](images/user-settings.png)
 
 For more information about the user settings page, see the [user settings page](user.html).
 
-Logout
-------
+### Logout
 
 Once you've finished working with IRIDA, we strongly recommend that you log out, especially if you are using a shared computer.
 
-You can log out of IRIDA by clicking on the <img src="images/logout-icon.png" alt="logout icon" class="inline"> in the top, right-hand corner of the page:
-
-![The logout button in the dashboard.](images/logout.png)
+You can log out of IRIDA by clicking on the user settings menu in the top, right-hand corner of the page, and *Logout*.
 
 Recent Activities
 -----------------

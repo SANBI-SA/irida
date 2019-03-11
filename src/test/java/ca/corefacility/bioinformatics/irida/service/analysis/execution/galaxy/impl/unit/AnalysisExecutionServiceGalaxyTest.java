@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -17,28 +18,23 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import ca.corefacility.bioinformatics.irida.exceptions.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.github.jmchilton.blend4j.galaxy.beans.HistoryDeleteResponse;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import ca.corefacility.bioinformatics.irida.exceptions.AnalysisAlreadySetException;
-import ca.corefacility.bioinformatics.irida.exceptions.EntityNotFoundException;
-import ca.corefacility.bioinformatics.irida.exceptions.ExecutionManagerException;
-import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowAnalysisTypeException;
-import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowException;
-import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowNotFoundException;
-import ca.corefacility.bioinformatics.irida.exceptions.NoSuchValueException;
-import ca.corefacility.bioinformatics.irida.exceptions.WorkflowException;
 import ca.corefacility.bioinformatics.irida.exceptions.galaxy.WorkflowUploadException;
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisCleanedState;
 import ca.corefacility.bioinformatics.irida.model.enums.AnalysisState;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFile;
+import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
 import ca.corefacility.bioinformatics.irida.model.workflow.analysis.Analysis;
@@ -48,6 +44,7 @@ import ca.corefacility.bioinformatics.irida.model.workflow.execution.galaxy.Prep
 import ca.corefacility.bioinformatics.irida.model.workflow.execution.galaxy.WorkflowInputsGalaxy;
 import ca.corefacility.bioinformatics.irida.model.workflow.structure.IridaWorkflowStructure;
 import ca.corefacility.bioinformatics.irida.model.workflow.submission.AnalysisSubmission;
+import ca.corefacility.bioinformatics.irida.pipeline.results.AnalysisSubmissionSampleProcessor;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyHistoriesService;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyLibrariesService;
 import ca.corefacility.bioinformatics.irida.pipeline.upload.galaxy.GalaxyWorkflowService;
@@ -57,6 +54,7 @@ import ca.corefacility.bioinformatics.irida.service.analysis.execution.galaxy.An
 import ca.corefacility.bioinformatics.irida.service.analysis.execution.galaxy.AnalysisExecutionServiceGalaxyAsync;
 import ca.corefacility.bioinformatics.irida.service.analysis.execution.galaxy.AnalysisExecutionServiceGalaxyCleanupAsync;
 import ca.corefacility.bioinformatics.irida.service.analysis.workspace.galaxy.AnalysisWorkspaceServiceGalaxy;
+import ca.corefacility.bioinformatics.irida.service.sample.SampleService;
 import ca.corefacility.bioinformatics.irida.service.workflow.IridaWorkflowsService;
 
 /**
@@ -82,6 +80,10 @@ public class AnalysisExecutionServiceGalaxyTest {
 	private Analysis analysisResults;
 	@Mock
 	private IridaWorkflowsService iridaWorkflowsService;
+	@Mock
+	private AnalysisSubmissionSampleProcessor analysisSubmissionSampleProcessor;
+	@Mock
+	private SampleService sampleService;
 
 	@Mock
 	private IridaWorkflow iridaWorkflow;
@@ -128,25 +130,25 @@ public class AnalysisExecutionServiceGalaxyTest {
 		MockitoAnnotations.initMocks(this);
 
 		String submissionName = "name";
-		Set<SingleEndSequenceFile> submissionInputFiles = Sets.newHashSet(new SingleEndSequenceFile(new SequenceFile()));
+		Set<SequencingObject> submissionInputFiles = Sets.newHashSet(new SingleEndSequenceFile(new SequenceFile()));
 
-		analysisSubmission = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "intial").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisPreparing = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "preparing").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisPrepared = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "prepared").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisSubmitting = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "submitting").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisRunning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "running").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisFinishedRunning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "finishedrunning").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisCompleting = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "completing").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisCompleted = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "completed").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisCompletedCleaning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "cleaning").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisCompletedCleaned = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "cleaned").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisError = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "error").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisErrorCleaning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "errorcleaning").inputFilesSingleEnd(submissionInputFiles).build();
-		analysisErrorCleaned = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "errorcleaned").inputFilesSingleEnd(submissionInputFiles).build();
+		analysisSubmission = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "intial").inputFiles(submissionInputFiles).build();
+		analysisPreparing = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "preparing").inputFiles(submissionInputFiles).build();
+		analysisPrepared = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "prepared").inputFiles(submissionInputFiles).build();
+		analysisSubmitting = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "submitting").inputFiles(submissionInputFiles).build();
+		analysisRunning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "running").inputFiles(submissionInputFiles).build();
+		analysisFinishedRunning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "finishedrunning").inputFiles(submissionInputFiles).build();
+		analysisCompleting = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "completing").inputFiles(submissionInputFiles).build();
+		analysisCompleted = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "completed").inputFiles(submissionInputFiles).build();
+		analysisCompletedCleaning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "cleaning").inputFiles(submissionInputFiles).build();
+		analysisCompletedCleaned = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "cleaned").inputFiles(submissionInputFiles).build();
+		analysisError = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "error").inputFiles(submissionInputFiles).build();
+		analysisErrorCleaning = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "errorcleaning").inputFiles(submissionInputFiles).build();
+		analysisErrorCleaned = AnalysisSubmission.builder(WORKFLOW_ID).name(submissionName + "errorcleaned").inputFiles(submissionInputFiles).build();
 
 		AnalysisExecutionServiceGalaxyAsync workflowManagementAsync = new AnalysisExecutionServiceGalaxyAsync(
 				analysisSubmissionService, analysisService, galaxyWorkflowService, analysisWorkspaceService,
-				iridaWorkflowsService);
+				iridaWorkflowsService, analysisSubmissionSampleProcessor);
 		AnalysisExecutionServiceGalaxyCleanupAsync analysisExecutionServiceGalaxyCleanupAsync = new AnalysisExecutionServiceGalaxyCleanupAsync(
 				analysisSubmissionService, galaxyWorkflowService, galaxyHistoriesService, galaxyLibrariesService);
 		workflowManagement = new AnalysisExecutionServiceGalaxy(analysisSubmissionService, galaxyHistoriesService,
@@ -170,7 +172,6 @@ public class AnalysisExecutionServiceGalaxyTest {
 		analysisPrepared.setAnalysisState(AnalysisState.PREPARED);
 		analysisPrepared.setRemoteWorkflowId(REMOTE_WORKFLOW_ID);
 		analysisPrepared.setRemoteAnalysisId(ANALYSIS_ID);
-
 
 		analysisSubmitting.setId(INTERNAL_ANALYSIS_ID);
 		analysisSubmitting.setAnalysisState(AnalysisState.SUBMITTING);
@@ -205,6 +206,7 @@ public class AnalysisExecutionServiceGalaxyTest {
 		analysisCompleted.setAnalysisCleanedState(AnalysisCleanedState.NOT_CLEANED);
 		analysisCompleted.setAnalysis(analysisResults);
 		analysisCompleted.setRemoteInputDataId(LIBRARY_ID);
+		analysisCompleted.setUpdateSamples(true);
 		
 		analysisCompletedCleaning.setId(INTERNAL_ANALYSIS_ID);
 		analysisCompletedCleaning.setAnalysisState(AnalysisState.COMPLETED);
@@ -473,6 +475,28 @@ public class AnalysisExecutionServiceGalaxyTest {
 		when(analysisSubmissionService.exists(INTERNAL_ANALYSIS_ID)).thenReturn(true);
 		when(analysisSubmissionService.update(analysisFinishedRunning)).thenReturn(analysisCompleting);
 		when(analysisSubmissionService.update(analysisCompleting)).thenReturn(analysisCompleted);
+		
+		Future<AnalysisSubmission> actualCompletedSubmissionFuture = workflowManagement
+				.transferAnalysisResults(analysisFinishedRunning);
+		AnalysisSubmission actualCompletedSubmission = actualCompletedSubmissionFuture.get();
+		assertEquals(analysisCompleted, actualCompletedSubmission);
+		assertEquals("analysisResults should be equal", analysisResults, actualCompletedSubmission.getAnalysis());
+
+		verify(analysisService).create(analysisResults);
+		verify(analysisSubmissionService, times(2)).update(any(AnalysisSubmission.class));
+	}
+	
+	/**
+	 * Tests successfully getting analysis results even if updating samples failed.
+	 */
+	@Test
+	public void testTransferAnalysisResultsSuccessUpdateSamplesFail()
+			throws ExecutionManagerException, IOException, IridaWorkflowNotFoundException, InterruptedException,
+			ExecutionException, IridaWorkflowAnalysisTypeException, PostProcessingException {
+		when(analysisSubmissionService.exists(INTERNAL_ANALYSIS_ID)).thenReturn(true);
+		when(analysisSubmissionService.update(analysisFinishedRunning)).thenReturn(analysisCompleting);
+		when(analysisSubmissionService.update(analysisCompleting)).thenReturn(analysisCompleted);
+		doThrow(new AccessDeniedException("")).when(analysisSubmissionSampleProcessor).updateSamples(analysisSubmission);
 		
 		Future<AnalysisSubmission> actualCompletedSubmissionFuture = workflowManagement
 				.transferAnalysisResults(analysisFinishedRunning);

@@ -1,7 +1,33 @@
 package ca.corefacility.bioinformatics.irida.ria.web.samples;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolationException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import ca.corefacility.bioinformatics.irida.exceptions.ConcatenateException;
+import ca.corefacility.bioinformatics.irida.model.assembly.GenomeAssembly;
 import ca.corefacility.bioinformatics.irida.model.enums.ProjectRole;
-import ca.corefacility.bioinformatics.irida.model.joins.Join;
+import ca.corefacility.bioinformatics.irida.model.joins.impl.SampleGenomeAssemblyJoin;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.sample.MetadataTemplateField;
 import ca.corefacility.bioinformatics.irida.model.sample.QCEntry;
@@ -13,41 +39,21 @@ import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFile;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequenceFilePair;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SequencingObject;
 import ca.corefacility.bioinformatics.irida.model.sequenceFile.SingleEndSequenceFile;
-import ca.corefacility.bioinformatics.irida.model.user.Role;
 import ca.corefacility.bioinformatics.irida.model.user.User;
 import ca.corefacility.bioinformatics.irida.ria.web.BaseController;
+import ca.corefacility.bioinformatics.irida.security.permissions.sample.UpdateSamplePermission;
 import ca.corefacility.bioinformatics.irida.service.ProjectService;
 import ca.corefacility.bioinformatics.irida.service.SequencingObjectService;
 import ca.corefacility.bioinformatics.irida.service.sample.MetadataTemplateService;
 import ca.corefacility.bioinformatics.irida.service.sample.SampleService;
-import ca.corefacility.bioinformatics.irida.service.user.UserService;
 import ca.corefacility.bioinformatics.irida.web.controller.api.projects.RESTProjectSamplesController;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.ConstraintViolationException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.Principal;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.google.common.collect.Lists;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -74,6 +80,7 @@ public class SamplesController extends BaseController {
 	private static final String SAMPLE_PAGE = SAMPLES_DIR + "sample";
 	private static final String SAMPLE_EDIT_PAGE = SAMPLES_DIR + "sample_edit";
 	public static final String SAMPLE_FILES_PAGE = SAMPLES_DIR + "sample_files";
+	public static final String FILES_CONCATENATE_PAGE = SAMPLES_DIR + "sample_files_concatenate";
 
 	// Field Names
 	public static final String SAMPLE_NAME = "sampleName";
@@ -94,20 +101,22 @@ public class SamplesController extends BaseController {
 	private final SampleService sampleService;
 
 	private final ProjectService projectService;
-	private final UserService userService;
 
 	private final SequencingObjectService sequencingObjectService;
 	private final MetadataTemplateService metadataTemplateService;
 
-	private final MessageSource messageSource;	
+	private final UpdateSamplePermission updateSamplePermission;
+
+	private final MessageSource messageSource;
 
 	@Autowired
-	public SamplesController(SampleService sampleService, UserService userService, ProjectService projectService,
-			SequencingObjectService sequencingObjectService, MetadataTemplateService metadataTemplateService, MessageSource messageSource) {
+	public SamplesController(SampleService sampleService, ProjectService projectService,
+			SequencingObjectService sequencingObjectService, UpdateSamplePermission updateSamplePermission,
+			MetadataTemplateService metadataTemplateService, MessageSource messageSource) {
 		this.sampleService = sampleService;
-		this.userService = userService;
 		this.projectService = projectService;
 		this.sequencingObjectService = sequencingObjectService;
+		this.updateSamplePermission = updateSamplePermission;
 		this.metadataTemplateService = metadataTemplateService;
 		this.messageSource = messageSource;
 	}
@@ -126,12 +135,12 @@ public class SamplesController extends BaseController {
 	 * @return The name of the page.
 	 */
 	@RequestMapping(value = { "/samples/{sampleId}/details", "/projects/{projectId}/samples/{sampleId}/details" })
-	public String getSampleSpecificPage(final Model model, @PathVariable Long sampleId, Principal principal) {
+	public String getSampleSpecificPage(final Model model, @PathVariable Long sampleId) {
 		logger.debug("Getting sample page for sample [" + sampleId + "]");
 		Sample sample = sampleService.read(sampleId);
 		model.addAttribute(MODEL_ATTR_SAMPLE, sample);
 		model.addAttribute(MODEL_ATTR_ACTIVE_NAV, ACTIVE_NAV_DETAILS);
-		model.addAttribute(MODEL_ATTR_CAN_MANAGE_SAMPLE, isProjectManagerForSample(sample, principal));
+		model.addAttribute(MODEL_ATTR_CAN_MANAGE_SAMPLE, isProjectManagerForSample(sample));
 		return SAMPLE_PAGE;
 	}
 
@@ -182,22 +191,29 @@ public class SamplesController extends BaseController {
 			@RequestParam(name = "metadata") String metadataString, @RequestParam Map<String, String> params,
 			HttpServletRequest request) {
 		logger.debug("Updating sample [" + sampleId + "]");
-		
+
 		Map<String, Object> updatedValues = new HashMap<>();
 		for (String field : FIELDS) {
 			String fieldValue = params.get(field);
-			if (!Strings.isNullOrEmpty(fieldValue)) {
-				updatedValues.put(field, fieldValue);
+			if(Strings.isNullOrEmpty(fieldValue)){
+				fieldValue = null;
+			}
+
+			updatedValues.put(field, fieldValue);
+			
+			if (fieldValue != null) {
 				model.addAttribute(field, fieldValue);
 			}
 		}
+
 		// Special case because it is a date field.
+		updatedValues.put(COLLECTION_DATE, collectionDate);
 		if (collectionDate != null) {
-			updatedValues.put(COLLECTION_DATE, collectionDate);
 			model.addAttribute(COLLECTION_DATE, collectionDate);
 		}
 
-		/**
+
+		/*
 		 * If there's sample metadata to add, add it here.
 		 */
 		Map<String, MetadataEntry> metadataMap;
@@ -245,13 +261,10 @@ public class SamplesController extends BaseController {
 	 *            the id of the {@link Project} the sample is in
 	 * @param sampleId
 	 *            Sample id
-	 * @param principal
-	 *            a reference to the logged in user.
 	 * @return a Map representing all files (pairs and singles) for the sample.
 	 */
 	@RequestMapping(value = { "/projects/{projectId}/samples/{sampleId}/sequenceFiles" })
-	public String getSampleFiles(final Model model, @PathVariable Long projectId, @PathVariable Long sampleId,
-			Principal principal) {
+	public String getSampleFiles(final Model model, @PathVariable Long projectId, @PathVariable Long sampleId) {
 		Sample sample = sampleService.read(sampleId);
 		model.addAttribute("sampleId", sampleId);
 
@@ -259,7 +272,11 @@ public class SamplesController extends BaseController {
 				.getSequencesForSampleOfType(sample, SequenceFilePair.class);
 		Collection<SampleSequencingObjectJoin> singleFileJoins = sequencingObjectService
 				.getSequencesForSampleOfType(sample, SingleEndSequenceFile.class);
+		Collection<SampleGenomeAssemblyJoin> genomeAssemblyJoins = sampleService.getAssembliesForSample(sample);
+		logger.trace("Assembly joins " + genomeAssemblyJoins);
 
+		List<GenomeAssembly> genomeAssemblies = genomeAssemblyJoins.stream().map(SampleGenomeAssemblyJoin::getObject)
+				.collect(Collectors.toList());
 		List<SequencingObject> filePairs = filePairJoins.stream().map(SampleSequencingObjectJoin::getObject)
 				.collect(Collectors.toList());
 
@@ -281,11 +298,39 @@ public class SamplesController extends BaseController {
 		// SequenceFile
 		model.addAttribute("paired_end", filePairs);
 		model.addAttribute("single_end", singleFileJoins);
+		
+		// assemblies
+		model.addAttribute("assemblies", genomeAssemblies);
 
 		model.addAttribute(MODEL_ATTR_SAMPLE, sample);
-		model.addAttribute(MODEL_ATTR_CAN_MANAGE_SAMPLE, isProjectManagerForSample(sample, principal));
+		model.addAttribute(MODEL_ATTR_CAN_MANAGE_SAMPLE, isProjectManagerForSample(sample));
 		model.addAttribute(MODEL_ATTR_ACTIVE_NAV, ACTIVE_NAV_FILES);
 		return SAMPLE_FILES_PAGE;
+	}
+	
+	/**
+	 * Downloads an {@link GenomeAssembly} associated with a sample.
+	 *
+	 * @param sampleId
+	 *            Id for the sample containing the assembly to download.
+	 * @param assemblyId
+	 *            The id for the assembly.
+	 * @param response
+	 *            {@link HttpServletResponse}
+	 * @throws IOException
+	 *             if we can't write the file to the response.
+	 */
+	@RequestMapping("/samples/download/{sampleId}/assembly/{assemblyId}")
+	public void downloadAssembly(@PathVariable Long sampleId, @PathVariable Long assemblyId,
+			HttpServletResponse response) throws IOException {
+		Sample sample = sampleService.read(sampleId);
+		GenomeAssembly genomeAssembly = sampleService.getGenomeAssemblyForSample(sample, assemblyId);
+
+		Path path = genomeAssembly.getFile();
+		response.setHeader("Content-Disposition",
+				"attachment; filename=\"" + genomeAssembly.getLabel() + "\"");
+		Files.copy(path, response.getOutputStream());
+		response.flushBuffer();
 	}
 
 	/**
@@ -295,13 +340,11 @@ public class SamplesController extends BaseController {
 	 *            Spring {@link Model}
 	 * @param sampleId
 	 *            Sample id
-	 * @param principal
-	 *            a reference to the logged in user.
 	 * @return a Map representing all files (pairs and singles) for the sample.
 	 */
 	@RequestMapping("/samples/{sampleId}/sequenceFiles")
-	public String getSampleFilesWithoutProject(final Model model, @PathVariable Long sampleId, Principal principal) {
-		return getSampleFiles(model, null, sampleId, principal);
+	public String getSampleFilesWithoutProject(final Model model, @PathVariable Long sampleId) {
+		return getSampleFiles(model, null, sampleId);
 	}
 
 	/**
@@ -334,9 +377,7 @@ public class SamplesController extends BaseController {
 	 * links that previously existed and may be bookmarked. These url require
 	 * the "/sequenceFiles" to prevent loading errors.
 	 *
-	 * @param request{@link
-	 * 			HttpServletRequest}
-	 *
+	 * @param request {@link HttpServletRequest}
 	 * @return {@link String} with the project sequence file URL
 	 */
 	@RequestMapping(value = { "/samples/{sampleId}", "/projects/{projectId}/samples/{sampleId}" })
@@ -386,6 +427,43 @@ public class SamplesController extends BaseController {
 	}
 
 	/**
+	 * Remove a given {@link GenomeAssembly} from a sample
+	 *
+	 * @param attributes
+	 *            the redirect attributes where we can add flash-scoped messages
+	 *            for the client.
+	 * @param sampleId
+	 *            the {@link Sample} id
+	 * @param assemblyId
+	 *            The {@link GenomeAssembly}.
+	 * @param request
+	 *            {@link HttpServletRequest}
+	 * @param locale
+	 *            the locale specified by the browser.
+	 * @return map stating the request was successful
+	 */
+	@RequestMapping(value = "/samples/{sampleId}/files/assembly/delete", method = RequestMethod.POST)
+	public String removeGenomeAssemblyFromSample(RedirectAttributes attributes, @PathVariable Long sampleId,
+			@RequestParam Long assemblyId, HttpServletRequest request, Locale locale) {
+		Sample sample = sampleService.read(sampleId);
+		GenomeAssembly genomeAssembly = sampleService.getGenomeAssemblyForSample(sample, assemblyId);
+
+		try {
+			sampleService.removeGenomeAssemblyFromSample(sample, assemblyId);
+			attributes.addFlashAttribute("fileDeleted", true);
+			attributes.addFlashAttribute("fileDeletedMessage", messageSource.getMessage(
+					"samples.files.assembly.removed.message", new Object[] { genomeAssembly.getLabel() }, locale));
+		} catch (Exception e) {
+			logger.error("Could not remove assembly from sample=" + sample, e);
+			attributes.addFlashAttribute("fileDeleted", true);
+			attributes.addFlashAttribute("fileDeletedError", messageSource.getMessage(
+					"samples.files.assembly.remove.error", new Object[] { sample.getSampleName() }, locale));
+		}
+
+		return "redirect:" + request.getHeader("referer");
+	}
+
+	/**
 	 * Upload {@link SequenceFile}'s to a sample
 	 *
 	 * @param sampleId
@@ -398,9 +476,9 @@ public class SamplesController extends BaseController {
 	 * @throws IOException
 	 *             on upload failure
 	 */
-	@RequestMapping(value = { "/samples/{sampleId}/sequenceFiles/upload" })
+	@RequestMapping(value = { "/samples/{sampleId}/sequenceFiles/upload" }, method = RequestMethod.POST)
 	public void uploadSequenceFiles(@PathVariable Long sampleId,
-			@RequestParam(value = "file") List<MultipartFile> files, HttpServletResponse response) throws IOException {
+			@RequestParam(value = "files") List<MultipartFile> files, HttpServletResponse response) throws IOException {
 		Sample sample = sampleService.read(sampleId);
 
 		final Map<String, List<MultipartFile>> pairedFiles = SamplePairer.getPairedFiles(files);
@@ -440,6 +518,83 @@ public class SamplesController extends BaseController {
 		}
 
 		return ImmutableMap.of("samples", result);
+	}
+	
+	/**
+	 * Get the page for concatenating {@link SequencingObject}s in a
+	 * {@link Sample}
+	 * 
+	 * @param sampleId
+	 *            the {@link Sample} to get files for
+	 * @param model
+	 *            model for the view
+	 * @return name of the files concatenate page
+	 */
+	@RequestMapping(value = { "/samples/{sampleId}/concatenate",
+			"/projects/{projectId}/samples/{sampleId}/concatenate" }, method = RequestMethod.GET)
+	public String getConcatenatePage(@PathVariable Long sampleId, Model model) {
+		Sample sample = sampleService.read(sampleId);
+		model.addAttribute("sampleId", sampleId);
+
+		Collection<SampleSequencingObjectJoin> filePairJoins = sequencingObjectService
+				.getSequencesForSampleOfType(sample, SequenceFilePair.class);
+		Collection<SampleSequencingObjectJoin> singleFileJoins = sequencingObjectService
+				.getSequencesForSampleOfType(sample, SingleEndSequenceFile.class);
+
+		List<SequencingObject> filePairs = filePairJoins.stream().map(SampleSequencingObjectJoin::getObject)
+				.collect(Collectors.toList());
+
+		// SequenceFile
+		model.addAttribute("paired_end", filePairs);
+		model.addAttribute("single_end", singleFileJoins);
+
+		model.addAttribute(MODEL_ATTR_SAMPLE, sample);
+		model.addAttribute(MODEL_ATTR_CAN_MANAGE_SAMPLE, isProjectManagerForSample(sample));
+		model.addAttribute(MODEL_ATTR_ACTIVE_NAV, ACTIVE_NAV_FILES);
+		return FILES_CONCATENATE_PAGE;
+	}
+
+	/**
+	 * Concatenate a collection of {@link SequencingObject}s
+	 * 
+	 * @param sampleId
+	 *            the id of the {@link Sample} to concatenate in
+	 * @param objectIds
+	 *            the {@link SequencingObject} ids
+	 * @param filename
+	 *            base of the new filename to create
+	 * @param removeOriginals
+	 *            boolean whether to remove the original files
+	 * @param model
+	 *            model for the view
+	 * @param request
+	 *            the incoming {@link HttpServletRequest}
+	 * @return redirect to the files page if successul
+	 */
+	@RequestMapping(value = { "/samples/{sampleId}/concatenate",
+			"/projects/{projectId}/samples/{sampleId}/concatenate" }, method = RequestMethod.POST)
+	public String concatenateSequenceFiles(@PathVariable Long sampleId, @RequestParam(name = "seq") Set<Long> objectIds,
+			@RequestParam(name = "filename") String filename,
+			@RequestParam(name = "remove", defaultValue = "false", required = false) boolean removeOriginals,
+			Model model, HttpServletRequest request) {
+		Sample sample = sampleService.read(sampleId);
+
+		Iterable<SequencingObject> readMultiple = sequencingObjectService.readMultiple(objectIds);
+
+		try {
+			sequencingObjectService.concatenateSequences(Lists.newArrayList(readMultiple), filename, sample,
+					removeOriginals);
+		} catch (ConcatenateException ex) {
+			logger.error("Error concatenating files: ", ex);
+			
+			model.addAttribute("concatenateError", true);
+			
+			return getConcatenatePage(sampleId, model);
+		}
+
+		final String url = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+		final String redirectUrl = url.substring(0, url.indexOf("/concatenate"));
+		return "redirect:" + redirectUrl;
 	}
 
 	/**
@@ -496,28 +651,11 @@ public class SamplesController extends BaseController {
 	 *
 	 * @param sample
 	 *            The sample to test
-	 * @param principal
-	 *            The currently logged in principal
 	 * @return true/false if they have management permissions for the sample
 	 */
-	private boolean isProjectManagerForSample(Sample sample, Principal principal) {
-		User userByUsername = userService.getUserByUsername(principal.getName());
+	private boolean isProjectManagerForSample(Sample sample) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (userByUsername.getSystemRole().equals(Role.ROLE_ADMIN)) {
-			return true;
-		}
-		
-		// if the sample is remote managers shouldn't be able to edit
-		if (sample.isRemote()) {
-			return false;
-		}
-
-		List<Join<Project, Sample>> projectsForSample = projectService.getProjectsForSample(sample);
-		for (Join<Project, Sample> join : projectsForSample) {
-			if (projectService.userHasProjectRole(userByUsername, join.getSubject(), ProjectRole.PROJECT_OWNER)) {
-				return true;
-			}
-		}
-		return false;
+		return updateSamplePermission.isAllowed(authentication, sample);
 	}
 }

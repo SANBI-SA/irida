@@ -25,6 +25,7 @@ import ca.corefacility.bioinformatics.irida.exceptions.IridaWorkflowLoadExceptio
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflow;
 import ca.corefacility.bioinformatics.irida.model.workflow.IridaWorkflowTestBuilder;
 import ca.corefacility.bioinformatics.irida.model.workflow.description.IridaWorkflowDescription;
+import ca.corefacility.bioinformatics.irida.service.impl.AnalysisTypesServiceImpl;
 import ca.corefacility.bioinformatics.irida.service.workflow.IridaWorkflowLoaderService;
 
 /**
@@ -49,7 +50,7 @@ public class IridaWorkflowLoaderServiceTest {
 	public void setup() throws IridaWorkflowException, IOException {
 		MockitoAnnotations.initMocks(this);
 
-		iridaWorkflowLoaderService = new IridaWorkflowLoaderService(workflowDescriptionUnmarshellar);
+		iridaWorkflowLoaderService = new IridaWorkflowLoaderService(workflowDescriptionUnmarshellar, new AnalysisTypesServiceImpl());
 		iridaWorkflow = IridaWorkflowTestBuilder.buildTestWorkflow(iridaWorkflowId, IridaWorkflowTestBuilder.Input.SINGLE, "reference");
 
 		workflowDescriptionPath = Files.createTempFile("workflowLoaderTest", "tmp");
@@ -82,7 +83,7 @@ public class IridaWorkflowLoaderServiceTest {
 	@Test(expected = IridaWorkflowLoadException.class)
 	public void testLoadWorkflowDescriptionFail() throws XmlMappingException, IOException, IridaWorkflowLoadException {
 		IridaWorkflowDescription description = IridaWorkflowTestBuilder.buildTestDescription(iridaWorkflowId, "name",
-				"version", null, IridaWorkflowTestBuilder.Input.SINGLE, "reference");
+				"version", null, IridaWorkflowTestBuilder.Input.SINGLE, "reference", true);
 		when(workflowDescriptionUnmarshellar.unmarshal(any(Source.class))).thenReturn(description);
 
 		iridaWorkflowLoaderService.loadWorkflowDescription(workflowDescriptionPath);

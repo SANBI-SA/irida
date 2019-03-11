@@ -58,4 +58,10 @@
 	<include file="changesets/0.15.0/all-changes.xml" relativeToChangelogFile="true"/>
 	<include file="changesets/0.16.0/all-changes.xml" relativeToChangelogFile="true"/>
 	<include file="changesets/0.17.0/all-changes.xml" relativeToChangelogFile="true"/>
+	<include file="changesets/0.18.0/all-changes.xml" relativeToChangelogFile="true"/>
+	<include file="changesets/0.19.0/all-changes.xml" relativeToChangelogFile="true"/>
+	<include file="changesets/0.20.0/all-changes.xml" relativeToChangelogFile="true"/>
+    <include file="changesets/0.21.0/all-changes.xml" relativeToChangelogFile="true"/>
+	<include file="changesets/0.22.0/all-changes.xml" relativeToChangelogFile="true"/>
+	<include file="changesets/19.01/all-changes.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

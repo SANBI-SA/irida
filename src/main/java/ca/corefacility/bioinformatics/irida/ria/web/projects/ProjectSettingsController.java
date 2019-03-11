@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.google.common.collect.ImmutableMap;
+
 import ca.corefacility.bioinformatics.irida.model.joins.impl.ProjectMetadataTemplateJoin;
 import ca.corefacility.bioinformatics.irida.model.project.Project;
 import ca.corefacility.bioinformatics.irida.model.project.ProjectSyncFrequency;
@@ -30,8 +32,9 @@ import ca.corefacility.bioinformatics.irida.service.remote.ProjectRemoteService;
 import ca.corefacility.bioinformatics.irida.service.sample.MetadataTemplateService;
 import ca.corefacility.bioinformatics.irida.service.user.UserService;
 
-import com.google.common.collect.ImmutableMap;
-
+/**
+ * Handles basic settings pages for a project
+ */
 @Controller
 @RequestMapping("/projects/{projectId}/settings")
 public class ProjectSettingsController {
@@ -258,13 +261,10 @@ public class ProjectSettingsController {
 	/**
 	 * Update the project assembly setting for the {@link Project}
 	 *
-	 * @param projectId
-	 *            the ID of a {@link Project}
-	 * @param assemble
-	 *            Whether or not to do automated assemblies
-	 * @param model
-	 *            Model for the view
-	 *
+	 * @param projectId the ID of a {@link Project}
+	 * @param assemble  Whether or not to do automated assemblies
+	 * @param model     Model for the view
+	 * @param locale    Locale of the logged in user
 	 * @return success message if successful
 	 */
 	@RequestMapping(value = "/assemble", method = RequestMethod.POST)
@@ -289,21 +289,20 @@ public class ProjectSettingsController {
 
 		return ImmutableMap.of("result", message);
 	}
-	
+
 	/**
 	 * Update the project sistr setting for the {@link Project}
 	 *
-	 * @param projectId
-	 *            the ID of a {@link Project}
-	 * @param sistr
-	 *            Whether or not to do automated sistr typing.
-	 * @param model
-	 *            Model for the view
+	 * @param projectId the ID of a {@link Project}
+	 * @param sistr     Whether or not to do automated sistr typing.
+	 * @param model     Model for the view
+	 * @param locale    Locale of the logged in user
 	 * @return success message if successful
 	 */
 	@RequestMapping(value = "/sistr", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, String> updateSistrSetting(@PathVariable Long projectId, @RequestParam boolean sistr,
+	public Map<String, String> updateSistrSetting(@PathVariable Long projectId, @RequestParam
+			Project.AutomatedSISTRSetting sistr,
 			final Model model, Locale locale) {
 		Project read = projectService.read(projectId);
 
@@ -313,7 +312,7 @@ public class ProjectSettingsController {
 		projectService.updateProjectSettings(read, updates);
 
 		String message = null;
-		if (sistr) {
+		if (sistr.equals(Project.AutomatedSISTRSetting.AUTO) || sistr.equals(Project.AutomatedSISTRSetting.AUTO_METADATA)) {
 			message = messageSource.getMessage("project.settings.notifications.sistr.enabled",
 					new Object[] { read.getLabel() }, locale);
 		} else {
@@ -331,8 +330,10 @@ public class ProjectSettingsController {
 	 *            the ID of a {@link Project}
 	 * @param genomeSize
 	 *            the genomeSize to set for the project
-	 * @param requiredCoverage
-	 *            coverage needed for qc to pass
+	 * @param minimumCoverage
+	 *            minimum coverage needed for qc to pass
+	 * @param maximumCoverage
+	 *            maximum coverage needed for QC to pass
 	 * @param locale
 	 *            locale of the user
 	 *
@@ -341,11 +342,21 @@ public class ProjectSettingsController {
 	@RequestMapping(value = "/coverage", method = RequestMethod.POST)
 	@ResponseBody
 	public Map<String, String> updateCoverageSetting(@PathVariable Long projectId, @RequestParam Long genomeSize,
-			@RequestParam Integer requiredCoverage, Locale locale) {
+			@RequestParam(defaultValue = "0") Integer minimumCoverage,
+			@RequestParam(defaultValue = "0") Integer maximumCoverage, 
+			Locale locale) {
 		Project read = projectService.read(projectId);
 
+		if (minimumCoverage == 0) {
+			minimumCoverage = null;
+		}
+		if (maximumCoverage == 0) {
+			maximumCoverage = null;
+		}
+		
 		Map<String, Object> updates = new HashMap<>();
-		updates.put("requiredCoverage", requiredCoverage);
+		updates.put("minimumCoverage", minimumCoverage);
+		updates.put("maximumCoverage", maximumCoverage);
 		updates.put("genomeSize", genomeSize);
 
 		projectService.updateProjectSettings(read, updates);
